@@ -1,23 +1,16 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#include "editaddressdialog.h"
+#include "ui_editaddressdialog.h"
 
-#include <qt/editaddressdialog.h>
-#include <qt/forms/ui_editaddressdialog.h>
-
-#include <qt/addresstablemodel.h>
-#include <qt/guiutil.h>
+#include "addresstablemodel.h"
+#include "guiutil.h"
 
 #include <QDataWidgetMapper>
 #include <QMessageBox>
+#include <QClipboard>
 
-
-EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
+EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::EditAddressDialog),
-    mapper(0),
-    mode(_mode),
-    model(0)
+    ui(new Ui::EditAddressDialog), mapper(0), mode(mode), model(0)
 {
     ui->setupUi(this);
 
@@ -25,15 +18,27 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
 
     switch(mode)
     {
+    case NewReceivingAddress:
+        setWindowTitle(tr("New receiving address"));
+        ui->addressEdit->setEnabled(false);
+        ui->addressEdit->setVisible(false);
+        ui->stealthCB->setEnabled(true);
+        ui->stealthCB->setVisible(true);
+        break;
     case NewSendingAddress:
         setWindowTitle(tr("New sending address"));
+        ui->stealthCB->setVisible(false);
         break;
     case EditReceivingAddress:
         setWindowTitle(tr("Edit receiving address"));
         ui->addressEdit->setEnabled(false);
+        ui->addressEdit->setVisible(true);
+        ui->stealthCB->setEnabled(false);
+        ui->stealthCB->setVisible(true);
         break;
     case EditSendingAddress:
         setWindowTitle(tr("Edit sending address"));
+        ui->stealthCB->setVisible(false);
         break;
     }
 
@@ -46,15 +51,16 @@ EditAddressDialog::~EditAddressDialog()
     delete ui;
 }
 
-void EditAddressDialog::setModel(AddressTableModel *_model)
+void EditAddressDialog::setModel(AddressTableModel *model)
 {
-    this->model = _model;
-    if(!_model)
+    this->model = model;
+    if(!model)
         return;
 
-    mapper->setModel(_model);
+    mapper->setModel(model);
     mapper->addMapping(ui->labelEdit, AddressTableModel::Label);
     mapper->addMapping(ui->addressEdit, AddressTableModel::Address);
+    mapper->addMapping(ui->stealthCB, AddressTableModel::Type);
 }
 
 void EditAddressDialog::loadRow(int row)
@@ -69,12 +75,16 @@ bool EditAddressDialog::saveCurrentRow()
 
     switch(mode)
     {
+    case NewReceivingAddress:
     case NewSendingAddress:
+	{
+        int typeInd  = ui->stealthCB->isChecked() ? AddressTableModel::AT_Stealth : AddressTableModel::AT_Normal;
         address = model->addRow(
-                AddressTableModel::Send,
+                mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
                 ui->labelEdit->text(),
                 ui->addressEdit->text(),
-                model->GetDefaultAddressType());
+                typeInd);
+	}
         break;
     case EditReceivingAddress:
     case EditSendingAddress:
@@ -104,7 +114,7 @@ void EditAddressDialog::accept()
             break;
         case AddressTableModel::INVALID_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered address \"%1\" is not a valid Bitcoin address.").arg(ui->addressEdit->text()),
+                tr("The entered address \"%1\" is not a valid PayDay address.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case AddressTableModel::DUPLICATE_ADDRESS:
@@ -134,8 +144,14 @@ QString EditAddressDialog::getAddress() const
     return address;
 }
 
-void EditAddressDialog::setAddress(const QString &_address)
+void EditAddressDialog::setAddress(const QString &address)
 {
-    this->address = _address;
-    ui->addressEdit->setText(_address);
+    this->address = address;
+    ui->addressEdit->setText(address);
+}
+
+void EditAddressDialog::on_EditAddressPasteButton_clicked()
+{
+    // Paste text from clipboard into recipient field
+    ui->addressEdit->setText(QApplication::clipboard()->text());
 }

@@ -1,14 +1,10 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef TRANSACTIONFILTERPROXY_H
+#define TRANSACTIONFILTERPROXY_H
 
-#ifndef BITCOIN_QT_TRANSACTIONFILTERPROXY_H
-#define BITCOIN_QT_TRANSACTIONFILTERPROXY_H
+#include "util.h"
 
-#include <amount.h>
-
-#include <QDateTime>
 #include <QSortFilterProxyModel>
+#include <QDateTime>
 
 /** Filter the transaction list according to pre-specified rules. */
 class TransactionFilterProxy : public QSortFilterProxyModel
@@ -24,6 +20,8 @@ public:
     static const QDateTime MAX_DATE;
     /** Type filter bit field (all types) */
     static const quint32 ALL_TYPES = 0xFFFFFFFF;
+    /** Type filter bit field (all types but Darksend-SPAM) */
+    static const quint32 COMMON_TYPES = 4223;
 
     static quint32 TYPE(int type) { return 1<<type; }
 
@@ -35,7 +33,7 @@ public:
     };
 
     void setDateRange(const QDateTime &from, const QDateTime &to);
-    void setSearchString(const QString &);
+    void setAddressPrefix(const QString &addrPrefix);
     /**
       @note Type filter takes a bit field created with TYPE() or ALL_TYPES
      */
@@ -57,7 +55,7 @@ protected:
 private:
     QDateTime dateFrom;
     QDateTime dateTo;
-    QString m_search_string;
+    QString addrPrefix;
     quint32 typeFilter;
     WatchOnlyFilter watchOnlyFilter;
     CAmount minAmount;
@@ -65,4 +63,4 @@ private:
     bool showInactive;
 };
 
-#endif // BITCOIN_QT_TRANSACTIONFILTERPROXY_H
+#endif // TRANSACTIONFILTERPROXY_H

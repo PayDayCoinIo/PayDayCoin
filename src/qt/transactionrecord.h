@@ -1,22 +1,14 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef TRANSACTIONRECORD_H
+#define TRANSACTIONRECORD_H
 
-#ifndef BITCOIN_QT_TRANSACTIONRECORD_H
-#define BITCOIN_QT_TRANSACTIONRECORD_H
-
-#include <amount.h>
-#include <uint256.h>
+#include "uint256.h"
+#include "util.h"
 
 #include <QList>
 #include <QString>
 
-namespace interfaces {
-class Node;
-class Wallet;
-struct WalletTx;
-struct WalletTxStatus;
-}
+class CWallet;
+class CWalletTx;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -37,7 +29,6 @@ public:
         Unconfirmed,        /**< Not yet mined into a block **/
         Confirming,         /**< Confirmed, but waiting for the recommended number of confirmations **/
         Conflicted,         /**< Conflicts with other transaction or mempool **/
-        Abandoned,          /**< Abandoned from the wallet **/
         /// Generated (mined) transactions
         Immature,           /**< Mined but waiting for maturity */
         MaturesWarning,     /**< Transaction will likely not mature because no nodes have confirmed */
@@ -59,14 +50,15 @@ public:
     Status status;
     qint64 depth;
     qint64 open_for; /**< Timestamp if status==OpenUntilDate, otherwise number
-                      of additional blocks that need to be mined before
-                      finalization */
+                       of additional blocks that need to be mined before
+                       finalization */
     /**@}*/
 
     /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
 
-    bool needsUpdate;
+    //** Know when to update transaction for ix locks **/
+    int cur_num_ix_locks;
 };
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
@@ -83,35 +75,41 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        RecvWithDarksend,
+        DarksendDenominate,
+        DarksendCollateralPayment,
+        DarksendMakeCollaterals,
+        DarksendCreateDenominations,
+        Darksent
     };
 
     /** Number of confirmation recommended for accepting a transaction */
-    static const int RecommendedNumConfirmations = 6;
+    static const int RecommendedNumConfirmations = 10;
 
     TransactionRecord():
             hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 _hash, qint64 _time):
-            hash(_hash), time(_time), type(Other), address(""), debit(0),
+    TransactionRecord(uint256 hash, int64_t time):
+            hash(hash), time(time), type(Other), address(""), debit(0),
             credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 _hash, qint64 _time,
-                Type _type, const std::string &_address,
-                const CAmount& _debit, const CAmount& _credit):
-            hash(_hash), time(_time), type(_type), address(_address), debit(_debit), credit(_credit),
+    TransactionRecord(uint256 hash, qint64 time,
+                Type type, const std::string &address,
+                CAmount debit, CAmount credit):
+            hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
             idx(0)
     {
     }
 
     /** Decompose CWallet transaction to model transaction records.
      */
-    static bool showTransaction();
-    static QList<TransactionRecord> decomposeTransaction(const interfaces::WalletTx& wtx);
+    static bool showTransaction(const CWalletTx &wtx);
+    static QList<TransactionRecord> decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -133,18 +131,18 @@ public:
     bool involvesWatchAddress;
 
     /** Return the unique identifier for this transaction (part) */
-    QString getTxHash() const;
+    QString getTxID() const;
 
-    /** Return the output index of the subtransaction  */
-    int getOutputIndex() const;
+    /** Format subtransaction id */
+    static QString formatSubTxId(const uint256 &hash, int vout);
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime);
+    void updateStatus(const CWalletTx &wtx);
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded(int numBlocks) const;
+    bool statusUpdateNeeded();
 };
 
-#endif // BITCOIN_QT_TRANSACTIONRECORD_H
+#endif // TRANSACTIONRECORD_H

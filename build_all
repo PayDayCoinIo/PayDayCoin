@@ -1,0 +1,15 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" ; pushd `pwd` > /dev/null ; cd $DIR
+
+sudo apt-get install -y git qt5-qmake qt5-default qttools5-dev-tools make g++ autoconf automake autotools-dev autoconf automake libtool  libboost-all-dev libssl-dev libdb-dev libdb++-dev libdb++-dev libminiupnpc-dev libgmp3-dev psmisc
+sudo dd if=/dev/zero of=/var/swap.img bs=1024k count=1000
+#sudo mkswap /var/swap.img
+#sudo swapon /var/swap.img
+#sudo chmod 0600 /var/swap.img
+#sudo chown root:root /var/swap.img
+chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  make -f makefile.unix USE_UPNP=  
+strip PayDayd
+cd ..
+
+popd > /dev/null
+

@@ -1,98 +1,54 @@
-Mac OS X Build Instructions and Notes
-====================================
-The commands in this guide should be executed in a Terminal application.
-The built-in one is located in `/Applications/Utilities/Terminal.app`.
+Copyright (c) 2009-2012 Bitcoin Developers
+Distributed under the MIT/X11 software license, see the accompanying file
+license.txt or http://www.opensource.org/licenses/mit-license.php.  This
+product includes software developed by the OpenSSL Project for use in the
+OpenSSL Toolkit (http://www.openssl.org/).  This product includes cryptographic
+software written by Eric Young (eay@cryptsoft.com) and UPnP software written by
+Thomas Bernard.
 
-Preparation
------------
-Install the OS X command line tools:
 
-`xcode-select --install`
+Mac OS X PayDayd build instructions
+Laszlo Hanyecz <solar@heliacal.net>
+Douglas Huff <dhuff@jrbobdobbs.org>
 
-When the popup appears, click `Install`.
 
-Then install [Homebrew](https://brew.sh).
+See readme-qt.rst for instructions on building PayDay QT, the
+graphical user interface.
 
-Dependencies
-----------------------
+Tested on 10.5 and 10.6 intel.  PPC is not supported because it's big-endian.
 
-    brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python qt libevent qrencode
+All of the commands should be executed in Terminal.app.. it's in
+/Applications/Utilities
 
-See [dependencies.md](dependencies.md) for a complete overview.
+You need to install XCode with all the options checked so that the compiler and
+everything is available in /usr not just /Developer I think it comes on the DVD
+but you can get the current version from http://developer.apple.com
 
-If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG
 
-    brew install librsvg
+1.  Clone the github tree to get the source code:
 
-NOTE: Building with Qt4 is still supported, however, could result in a broken UI. Building with Qt5 is recommended.
+git clone https://github.com/PayDayCoinDev/PayDayCoin.git
 
-Berkeley DB
------------
-It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
-you can use [the installation script included in contrib/](/contrib/install_db4.sh)
-like so
+2.  Download and install MacPorts from http://www.macports.org/
 
-```shell
-./contrib/install_db4.sh .
-```
+2a. (for 10.7 Lion)
+    Edit /opt/local/etc/macports/macports.conf and uncomment "build_arch i386"
 
-from the root of the repository.
+3.  Install dependencies from MacPorts
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see the section *Disable-Wallet mode* below).
+sudo port install boost db48 openssl miniupnpc
 
-Build Bitcoin Core
-------------------------
+Optionally install qrencode (and set USE_QRCODE=1):
+sudo port install qrencode
 
-1. Clone the bitcoin source code and cd into `bitcoin`
+4.  Now you should be able to build PayDayd:
 
-        git clone https://github.com/bitcoin/bitcoin
-        cd bitcoin
+cd PayDayCoin/src
+make -f makefile.osx
 
-2.  Build bitcoin-core:
-
-    Configure and build the headless bitcoin binaries as well as the GUI (if Qt is found).
-
-    You can disable the GUI build by passing `--without-gui` to configure.
-
-        ./autogen.sh
-        ./configure
-        make
-
-3.  It is recommended to build and run the unit tests:
-
-        make check
-
-4.  You can also create a .dmg that contains the .app bundle (optional):
-
-        make deploy
-
-Running
--------
-
-Bitcoin Core is now available at `./src/bitcoind`
-
-Before running, it's recommended you create an RPC configuration file.
-
-    echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
-
-    chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
-
-The first time you run bitcoind, it will start downloading the blockchain. This process could take several hours.
-
-You can monitor the download process by looking at the debug.log file:
-
-    tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
-
-Other commands:
--------
-
-    ./src/bitcoind -daemon # Starts the bitcoin daemon.
-    ./src/bitcoin-cli --help # Outputs a list of command-line options.
-    ./src/bitcoin-cli help # Outputs a list of RPC commands when the daemon is running.
-
-Notes
------
-
-* Tested on OS X 10.8 through 10.13 on 64-bit Intel processors only.
-
-* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714)
+Run:
+  ./PayDayd --help  # for a list of command-line options.
+Run
+  ./PayDayd -daemon # to start the PayDay daemon.
+Run
+  ./PayDayd help # When the daemon is running, to get a list of RPC commands

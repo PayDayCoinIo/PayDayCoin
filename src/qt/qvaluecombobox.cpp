@@ -1,12 +1,12 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#include "qvaluecombobox.h"
 
-#include <qt/qvaluecombobox.h>
+#include <QStyledItemDelegate>
 
 QValueComboBox::QValueComboBox(QWidget *parent) :
         QComboBox(parent), role(Qt::UserRole)
 {
+    setItemDelegate(new QStyledItemDelegate());
+
     connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(handleSelectionChanged(int)));
 }
 
@@ -20,12 +20,12 @@ void QValueComboBox::setValue(const QVariant &value)
     setCurrentIndex(findData(value, role));
 }
 
-void QValueComboBox::setRole(int _role)
+void QValueComboBox::setRole(int role)
 {
-    this->role = _role;
+    this->role = role;
 }
 
 void QValueComboBox::handleSelectionChanged(int idx)
 {
-    Q_EMIT valueChanged();
+    emit valueChanged();
 }

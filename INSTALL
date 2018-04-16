@@ -1,0 +1,3 @@
+Building PayDay
+1) run build_all and wait till it finishes
+2) run configure_masternode only once, and store masternode_info.txt in safe place

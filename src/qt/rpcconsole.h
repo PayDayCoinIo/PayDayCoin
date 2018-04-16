@@ -1,31 +1,17 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef RPCCONSOLE_H
+#define RPCCONSOLE_H
 
-#ifndef BITCOIN_QT_RPCCONSOLE_H
-#define BITCOIN_QT_RPCCONSOLE_H
+#include "guiutil.h"
+#include "net.h"
 
-#include <qt/guiutil.h>
-#include <qt/peertablemodel.h>
-
-#include <net.h>
+#include "peertablemodel.h"
 
 #include <QWidget>
-#include <QCompleter>
-#include <QThread>
-
-class ClientModel;
-class PlatformStyle;
-class RPCTimerInterface;
-class WalletModel;
-
-namespace interfaces {
-    class Node;
-}
 
 namespace Ui {
     class RPCConsole;
 }
+class ClientModel;
 
 QT_BEGIN_NAMESPACE
 class QMenu;
@@ -38,16 +24,10 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent);
+    explicit RPCConsole(QWidget *parent = 0);
     ~RPCConsole();
 
-    static bool RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr);
-    static bool RPCExecuteCommandLine(interfaces::Node& node, std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr) {
-        return RPCParseCommandLine(&node, strResult, strCommand, true, pstrFilteredOut, walletID);
-    }
-
     void setClientModel(ClientModel *model);
-    void addWallet(WalletModel * const walletModel);
 
     enum MessageClass {
         MC_ERROR,
@@ -57,22 +37,17 @@ public:
         CMD_ERROR
     };
 
-    enum TabTypes {
-        TAB_INFO = 0,
-        TAB_CONSOLE = 1,
-        TAB_GRAPH = 2,
-        TAB_PEERS = 3
-    };
-
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
     void keyPressEvent(QKeyEvent *);
 
-private Q_SLOTS:
+private slots:
     void on_lineEdit_returnPressed();
     void on_tabWidget_currentChanged(int index);
     /** open the debug.log from the current datadir */
     void on_openDebugLogfileButton_clicked();
+    /** display messagebox with program parameters (same as bitcoin-qt --help) */
+    void on_showCLOptionsButton_clicked();
     /** change the time range of the network traffic graph */
     void on_sldGraphRange_valueChanged(int value);
     /** update traffic statistics */
@@ -88,47 +63,45 @@ private Q_SLOTS:
     void showOrHideBanTableIfRequired();
     /** clear the selected node */
     void clearSelectedNode();
+    /** clear traffic graph */
+    void on_btnClearTrafficGraph_clicked();
+    /** paste clipboard to line */
+    void on_pasteButton_clicked();
+    /** copy to clipboard */
+    void on_copyButton_clicked();
 
-public Q_SLOTS:
-    void clear(bool clearHistory = true);
-    void fontBigger();
-    void fontSmaller();
-    void setFontSize(int newSize);
-    /** Append the message to the message widget */
+public slots:
+    void clear();
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
-    /** Set network state shown in the UI */
-    void setNetworkActive(bool networkActive);
-    /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
-    /** Set size (number of transactions and memory usage) of the mempool in the UI */
-    void setMempoolSize(long numberOfTxs, size_t dynUsage);
+    /** Set number of blocks shown in the UI */
+    void setNumBlocks(int count);
+    /** Set number of masternodes shown in the UI */
+    void setMasternodeCount(const QString &strMasternodes);
     /** Go forward or back in history */
     void browseHistory(int offset);
     /** Scroll console view to end */
     void scrollToEnd();
     /** Handle selection of peer in peers list */
     void peerSelected(const QItemSelection &selected, const QItemSelection &deselected);
-    /** Handle selection caching before update */
-    void peerLayoutAboutToChange();
     /** Handle updated peer information */
     void peerLayoutChanged();
-    /** Disconnect a selected node on the Peers tab */
+   /** Disconnect a selected node on the Peers tab */
     void disconnectSelectedNode();
     /** Ban a selected node on the Peers tab */
     void banSelectedNode(int bantime);
     /** Unban a selected node on the Bans tab */
     void unbanSelectedNode();
-    /** set which tab has the focus (is visible) */
-    void setTabFocus(enum TabTypes tabType);
-
-Q_SIGNALS:
+    /** Show folder with wallet backups in default browser */
+    void showBackups();
+signals:
     // For RPC command executor
     void stopExecutor();
-    void cmdRequest(const QString &command, const QString &walletID);
+    void cmdRequest(const QString &command);
 
 private:
+    static QString FormatBytes(quint64 bytes);
     void startExecutor();
     void setTrafficGraphRange(int mins);
     /** show detailed information on ui about selected node */
@@ -137,31 +110,21 @@ private:
     enum ColumnWidths
     {
         ADDRESS_COLUMN_WIDTH = 200,
-        SUBVERSION_COLUMN_WIDTH = 150,
+        SUBVERSION_COLUMN_WIDTH = 100,
         PING_COLUMN_WIDTH = 80,
         BANSUBNET_COLUMN_WIDTH = 200,
         BANTIME_COLUMN_WIDTH = 250
 
     };
 
-    interfaces::Node& m_node;
     Ui::RPCConsole *ui;
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;
-    QString cmdBeforeBrowsing;
-    QList<NodeId> cachedNodeids;
-    const PlatformStyle *platformStyle;
-    RPCTimerInterface *rpcTimerInterface;
+    NodeId cachedNodeid;
     QMenu *peersTableContextMenu;
     QMenu *banTableContextMenu;
-    int consoleFontSize;
-    QCompleter *autoCompleter;
-    QThread thread;
-    QString m_last_wallet_id;
 
-    /** Update UI with latest network info from model. */
-    void updateNetworkState();
 };
 
-#endif // BITCOIN_QT_RPCCONSOLE_H
+#endif // RPCCONSOLE_H

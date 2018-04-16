@@ -1,21 +1,12 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#ifndef BITCOIN_QT_ADDRESSTABLEMODEL_H
-#define BITCOIN_QT_ADDRESSTABLEMODEL_H
+#ifndef ADDRESSTABLEMODEL_H
+#define ADDRESSTABLEMODEL_H
 
 #include <QAbstractTableModel>
 #include <QStringList>
 
-enum class OutputType;
-
 class AddressTablePriv;
+class CWallet;
 class WalletModel;
-
-namespace interfaces {
-class Wallet;
-}
 
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
@@ -25,12 +16,19 @@ class AddressTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit AddressTableModel(WalletModel *parent = 0);
+    explicit AddressTableModel(CWallet *wallet, WalletModel *parent = 0);
     ~AddressTableModel();
+
+    enum AddressType {
+        AT_Unknown = 0, /**< User specified label */
+        AT_Normal = 1,  /**< Bitcoin address */
+        AT_Stealth = 2  /**< Stealth address */
+    };
 
     enum ColumnIndex {
         Label = 0,   /**< User specified label */
-        Address = 1  /**< Bitcoin address */
+        Address = 1,  /**< Bitcoin address */
+	Type = 2 /**< Address type */
     };
 
     enum RoleIndex {
@@ -65,7 +63,7 @@ public:
     /* Add an address to the model.
        Returns the added address on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &label, const QString &address, const OutputType address_type);
+    QString addRow(const QString &type, const QString &label, const QString &address, int addressType);
 
     /* Look up label for address in address book, if not found return empty string.
      */
@@ -78,10 +76,9 @@ public:
 
     EditStatus getEditStatus() const { return editStatus; }
 
-    OutputType GetDefaultAddressType() const;
-
 private:
     WalletModel *walletModel;
+    CWallet *wallet;
     AddressTablePriv *priv;
     QStringList columns;
     EditStatus editStatus;
@@ -89,12 +86,12 @@ private:
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
 
-public Q_SLOTS:
+public slots:
     /* Update address list from core.
      */
-    void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
+    void updateEntry(const QString &address, const QString &label, bool isMine, int status);
 
     friend class AddressTablePriv;
 };
 
-#endif // BITCOIN_QT_ADDRESSTABLEMODEL_H
+#endif // ADDRESSTABLEMODEL_H
