@@ -8,7 +8,7 @@ How to install PayDay on debian-based system
 1. fetch sources   
 ``` git clone https://github.com/PayDayCoinIo/PayDayCoin.git ```
 1. go to fetched sources   
-``` cd PayDayCoinNode ```
+``` cd PayDayCoin ```
 1. download and build all pre-requisites   
 ``` ./build_all ```
 
