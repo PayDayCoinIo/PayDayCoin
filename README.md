@@ -6,16 +6,11 @@ How to install PayDay on debian-based system
 1. goto home directory   
 ``` cd ``` 
 1. fetch sources   
-``` git clone https://github.com/PayDayCoinIo/PayDayCoinNode.git ```
+``` git clone https://github.com/PayDayCoinIo/PayDayCoin.git ```
 1. go to fetched sources   
 ``` cd PayDayCoinNode ```
 1. download and build all pre-requisites   
 ``` ./build_all ```
-1. start autoconfiguration script   
-``` ./confiure_masternode ```
-1. store your keys and masternode info from   
-``` ~/masternode_info.txt ```   
-to some secure place. 
 
 # PayDay Coin Specification
 
