@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 wait_pdd_starts() {
         pdd getinfo  >/dev/null 2>&1

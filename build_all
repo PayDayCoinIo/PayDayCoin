@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 sudo apt-get install -y git qt5-qmake qt5-default qttools5-dev-tools make g++ autoconf automake autotools-dev autoconf automake libtool  libboost-all-dev libssl-dev libdb-dev libdb++-dev libdb++-dev libminiupnpc-dev libgmp3-dev
 #sudo dd if=/dev/zero of=/var/swap.img bs=1024k count=1000
 #sudo mkswap /var/swap.img

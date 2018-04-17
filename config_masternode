@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 . ./utils
 echo
 node=`pdd getaddressesbyaccount "" |  grep -oe "[0-9a-zA-Z]*"`
