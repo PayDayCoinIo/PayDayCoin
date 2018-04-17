@@ -1,10 +1,17 @@
 #!/bin/bash
 sudo apt-get install -y git qt5-qmake qt5-default qttools5-dev-tools make g++ autoconf automake autotools-dev autoconf automake libtool  libboost-all-dev libssl-dev libdb-dev libdb++-dev libdb++-dev libminiupnpc-dev libgmp3-dev
-#sudo dd if=/dev/zero of=/var/swap.img bs=1024k count=1000
-#sudo mkswap /var/swap.img
-#sudo swapon /var/swap.img
-#sudo chmod 0600 /var/swap.img
-#sudo chown root:root /var/swap.img
+
+if [ $(free -m -o | grep "[S]wap:" | awk '/^.*/{print $2}') -lt 1998 ]; then
+
+sudo swapoff -a
+sudo dd if=/dev/zero of=/var/swap.img bs=1024k count=2000
+sudo mkswap /var/swap.img
+sudo swapon /var/swap.img
+sudo chmod 0600 /var/swap.img
+sudo chown root:root /var/swap.img
+
+fi
+
 chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  make -f makefile.unix USE_UPNP=
 strip PayDayd
 cd ..
