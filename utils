@@ -1,0 +1,29 @@
+﻿#!/bin/bash
+
+wait_pdd_starts() {
+        pdd getinfo  >/dev/null 2>&1
+        while ((  $? > 0 ))
+        do
+          echo -n .
+          sleep 0.5
+          pdd getinfo >/dev/null 2>&1
+        done
+        echo
+
+}
+
+wait_pdd_stops() {
+        pidof pdd > /dev/null
+        if (( $? == 1 ))
+        then
+                return
+        fi
+        pdd getinfo  >/dev/null 2>&1
+        while ((  $? == 0 ))
+        do
+          echo -n .
+          sleep 0.5
+          pdd getinfo >/dev/null 2>&1
+        done
+        echo
+}

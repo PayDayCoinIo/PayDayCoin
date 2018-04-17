@@ -1,0 +1,33 @@
+﻿#!/bin/bash
+. ./utils
+echo
+node=`pdd getaddressesbyaccount "" |  grep -oe "[0-9a-zA-Z]*"`
+echo Masternode address $node > ~/masternode_info.txt
+key=`pdd masternode genkey`
+pk=`pdd dumpprivkey $node`
+
+echo "Stopping daemon"
+pdd stop
+
+wait_pdd_stops
+
+echo "Configuring masternode"
+
+echo Masternode key $key >> ~/masternode_info.txt
+echo masternodeprivkey=$key >> ~/.PayDay/PayDay.conf
+echo masternode=1 >> ~/.PayDay/PayDay.conf
+echo masternodesoftlock=1 >> ~/.PayDay/PayDay.conf
+
+echo "Starting daemon"
+pdd -daemon
+sleep 1
+wait_pdd_starts
+
+echo Masternode wallet private key $pk >> ~/masternode_info.txt
+echo Your masternode data stored in ~/masternode.info.txt
+cat ~/masternode_info.txt
+
+crontab -l  | grep -v "pdd masternode" > /tmp/pdd.cron
+echo "*/3 * * * *  pdd masternode start ">> /tmp/pdd.cron
+crontab /tmp/pdd.cron
+rm -f /tmp/pdd.cron
