@@ -14,3 +14,4 @@ sudo rm -f /usr/bin/pdd
 sudo rm -f /usr/local/bin/pdd
 cp src/PayDayd /usr/local/bin/pdd
 ln -s /usr/local/bin/pdd /usr/bin/pdd
+chmod +x config_basic config_masternode utils
