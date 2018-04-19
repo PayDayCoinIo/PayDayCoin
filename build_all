@@ -8,6 +8,13 @@ if [ $(whoami) != "root" ]; then
         fi
 fi
 
+if [ $(whoami) = "root" ]; then
+        which sudo > /dev/null 2>&1
+        if [ $? != 0 ]; then
+		apt-get install -y sudo
+        fi
+fi
+
 sudo apt-get install -y git qt5-qmake qt5-default qttools5-dev-tools make g++ autoconf automake autotools-dev autoconf automake libtool  libboost-all-dev libssl-dev libdb-dev libdb++-dev libdb++-dev libminiupnpc-dev libgmp3-dev
 
 if [ $(free -m | grep "[S]wap:" | awk '/^.*/{print $2}') -lt 1998 ]; then
