@@ -11,6 +11,10 @@ How to install PayDay on debian-based system
 ``` cd PayDayCoin ```
 1. download and build all pre-requisites   
 ``` ./build_all ```
+1. basic configure daemon
+``` ./config_basic ```
+1. Masternode configure
+``` ./config_masternode ```
 
 # PayDay Coin Specification
 
@@ -26,7 +30,7 @@ Block Reward: 280
 
 Block Time:	120 seconds (720 blocks/day)
 
-First PoS Block: 2001 Block
+First PoS Block: 7000 Block
 
 Minimum Staking Age: 24 Hr
 
