@@ -11,9 +11,12 @@ fi
 if [ $(whoami) = "root" ]; then
         which sudo > /dev/null 2>&1
         if [ $? != 0 ]; then
+		apt-get -y update ; at-get -y upgrade
 		apt-get install -y sudo
         fi
 fi
+
+sudo apt-get -y update ; at-get -y upgrade
 
 sudo apt-get install -y git qt5-qmake qt5-default qttools5-dev-tools make g++ autoconf automake autotools-dev autoconf automake libtool  libboost-all-dev libssl-dev libdb-dev libdb++-dev libdb++-dev libminiupnpc-dev libgmp3-dev
 
