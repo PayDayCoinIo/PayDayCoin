@@ -15,6 +15,7 @@ LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
 
 LMODE = dynamic
 LMODE2 = dynamic
+
 ifdef STATIC
 	LMODE = static
 	ifeq (${STATIC}, all)
@@ -35,7 +36,12 @@ LIBS += \
    -l db_cxx$(BDB_LIB_SUFFIX) \
    -l ssl \
    -l gmp \
-   -l crypto
+   -l crypto 
+
+ifdef STATIC
+LIBS += -l stdc++
+endif
+
 
 ifndef USE_UPNP
 	override USE_UPNP = -
@@ -201,9 +207,16 @@ LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 OBJS += obj/txdb-leveldb.o
+
+ifdef STATIC
+LIBS += -static-libstdc++ -static-libgcc
+endif
+
 leveldb/libleveldb.a:
 	@echo "Building LevelDB ..."; cd leveldb; chmod 755 *;make libleveldb.a libmemenv.a; cd ..;
 obj/txdb-leveldb.o: leveldb/libleveldb.a
+
+
 
 # auto-generated dependencies:
 -include obj/*.P
