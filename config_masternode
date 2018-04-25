@@ -1,5 +1,14 @@
 #!/bin/bash
 . ./utils
+
+pdd ping > /dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+   pdd -daemon > /dev/null 2>&1
+   sleep 1
+   wait_pdd_starts
+fi
+
 echo
 node=`pdd getaddressesbyaccount "" |  grep -oe "[0-9a-zA-Z]*"`
 echo Masternode address $node > ~/masternode_info.txt
@@ -26,8 +35,3 @@ wait_pdd_starts
 echo Masternode wallet private key $pk >> ~/masternode_info.txt
 echo Your masternode data stored in ~/masternode.info.txt
 cat ~/masternode_info.txt
-
-crontab -l  | grep -v "pdd masternode" > /tmp/pdd.cron
-echo "*/3 * * * *  pdd masternode start ">> /tmp/pdd.cron
-crontab /tmp/pdd.cron
-rm -f /tmp/pdd.cron

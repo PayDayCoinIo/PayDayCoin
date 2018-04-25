@@ -1,0 +1,17 @@
+#!/bin/bash
+
+. /usr/local/lib/pdd/utils
+
+pdd ping > /dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+   pdd -daemon > /dev/null 2>&1
+   sleep 1
+   wait_pdd_starts
+fi
+
+source ~/.PayDay/PayDay.conf
+
+if [ -n $masternode ]; then
+pdd masternode start  > /dev/null 2>&1
+fi

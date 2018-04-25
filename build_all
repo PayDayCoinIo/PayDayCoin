@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ $(whoami) != "root" ]; then
         which sudo > /dev/null 2>&1
@@ -38,6 +38,10 @@ sudo mkdir -p /usr/bin
 sudo mkdir -p /usr/local/bin
 sudo rm -f /usr/bin/pdd
 sudo rm -f /usr/local/bin/pdd
+sudo rm -f /usr/local/bin/pdd_sure_run
 sudo cp src/PayDayd /usr/local/bin/pdd
 sudo ln -s /usr/local/bin/pdd /usr/bin/pdd
-sudo chmod +x config_basic config_masternode utils
+sudo chmod +x config_basic config_masternode utils pdd_sure_run
+sudo cp pdd_sure_run /usr/local/bin/
+sudo mkdir -p /usr/local/lib/pdd/
+sudo cp utils /usr/local/lib/pdd/

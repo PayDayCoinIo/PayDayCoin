@@ -1,18 +1,27 @@
 #!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" ; pushd `pwd` > /dev/null ; cd $DIR
+
 . ./utils
 echo "Initial PayDay daemon config"
 
+pdd ping > /dev/null 2>&1
+
+if [ $? -eq 0 ]; then
+
 killall -9 pdd
 wait_pdd_stops
+
+fi
 mkdir -p ~/.PayDay/
 echo -en "rpcuser=PayDayrpc\nrpcpassword=" > ~/.PayDay/PayDay.conf && echo microtime | md5sum | base64 >> ~/.PayDay/PayDay.conf
 echo "server=1" >> ~/.PayDay/PayDay.conf
+echo "daemon=1" >> ~/.PayDay/PayDay.conf
 pdd -daemon
 sleep 1
 wait_pdd_starts
 
-crontab -l  | grep -v pdd > /tmp/pdd.cron
-echo "@reboot pdd -daemon ">> /tmp/pdd.cron
-echo "*/2 * * * *  pdd -daemon ">> /tmp/pdd.cron
+crontab -l  | grep -v "pdd" > /tmp/pdd.cron
+echo "@reboot pdd -daemon" >> /tmp/pdd.cron
+echo "*/5 * * * *  pdd_sure_run" >> /tmp/pdd.cron
 crontab /tmp/pdd.cron
 rm -f /tmp/pdd.cron
