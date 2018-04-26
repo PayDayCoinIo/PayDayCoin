@@ -22,7 +22,7 @@ Coin Name: PayDay Coin
 
 Ticker: PDX
 
-Coin Type: POW + POS
+Coin Type: POS
 
 Maximum Block Size: 3 MB
 
