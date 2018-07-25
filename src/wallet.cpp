@@ -679,7 +679,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
             }
             if (wtxIn.fFromMe && wtxIn.fFromMe != wtx.fFromMe)
             {
-                wtx.fFromMe = wtxIn.fFromMe;
+                wtx.fFromMe = 	wtxIn.fFromMe;
                 fUpdated = true;
             }
             fUpdated |= wtx.UpdateSpent(wtxIn.vfSpent);
@@ -693,6 +693,20 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
             if (!wtx.WriteToDisk())
                 return false;
 
+		/*
+		LogPrintf("Check transaction to conflicts: %s, %s\n", wtxIn.GetHash().ToString(), wtx.GetHash().ToString());
+		
+		BOOST_FOREACH(const uint256& conflict, wtxIn.GetConflicts())
+		{
+			if (!conflict.GetHex().empty()) {
+				LogPrintf("Transaction '%s' have conflicts with '%s\n'", wtxIn.GetHash().ToString(), conflict.GetHex().c_str());
+			} else
+			{
+				LogPrintf("Transaction '%s' don't have conflicts.\n", wtxIn.GetHash().ToString());
+			}
+		}
+		*/
+		
         // Break debit/credit balance caches:
         wtx.MarkDirty();
 
@@ -748,23 +762,34 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
     LOCK2(cs_main, cs_wallet);
     if (!AddToWalletIfInvolvingMe(tx, pblock, true))
         return; // Not one of ours
-
+	
+	
     // If a transaction changes 'conflicted' state, that changes the balance
     // available of the outputs it spends. So force those to be
     // recomputed, also:
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        if (mapWallet.count(txin.prevout.hash))
-            mapWallet[txin.prevout.hash].MarkDirty();
+        if (mapWallet.count(txin.prevout.hash)) {
+            LogPrintf("Transaction Dirty: %s\n",txin.prevout.hash.ToString());
+			mapWallet[txin.prevout.hash].MarkDirty();
+		}
     }
 
+    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
+            if (item.second.GetDepthInMainChain(false) == -1 ) {
+                LogPrintf("Conflicted transaction: %s\n",item.second.GetHash().ToString());
+            }
+    }
+	
     if (!fConnect)
     {
         // wallets need to refund inputs when disconnecting coinstake
         if (tx.IsCoinStake())
         {
-            if (IsFromMe(tx))
-                DisableTransaction(tx);
+            if (IsFromMe(tx)) {
+                LogPrintf("Disable Transaction: %s", tx.ToString());
+				DisableTransaction(tx);
+			}
         }
         return;
     }

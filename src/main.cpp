@@ -747,7 +747,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
 	uint256 hash = tx.GetHash();
 	if (pool.exists(hash))
 		return false;
-
+	
 	// ----------- instantX transaction scanning -----------
 
 	BOOST_FOREACH(const CTxIn& in, tx.vin) {
@@ -766,7 +766,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
 			COutPoint outpoint = tx.vin[i].prevout;
 			if (pool.mapNextTx.count(outpoint))
 			{
-				// Disable replacement feature for now
+				LogPrintf("Transaction is conflicted: %s\n",hash.ToString());
 				return false;
 			}
 		}
@@ -1238,6 +1238,8 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock)
 		CTxIndex txindex;
 		if (tx.ReadFromDisk(txdb, hash, txindex))
 		{
+			
+			LogPrintf("GetTransaction: read first\n");
 			CBlock block;
 			if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
 				hashBlock = block.GetHash();
@@ -1246,6 +1248,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock)
 		// look for transaction in disconnected blocks to find orphaned CoinBase and CoinStake transactions
 		BOOST_FOREACH(PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
 		{
+			LogPrintf("GetTransaction: from orphan\n");
 			CBlockIndex* pindex = item.second;
 			if (pindex == pindexBest || pindex->pnext != 0)
 				continue;
@@ -2073,9 +2076,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 	BOOST_FOREACH(CTransaction& tx, vtx)
 		SyncWithWallets(tx, this);
 
-
-
-
 	return true;
 }
 
@@ -2583,14 +2583,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 		if (fDebug) { LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", pindexBest->nHeight + 1); }
 	}
 
-
-
-
-
-
-
-
-
 	// Check transactions
 	BOOST_FOREACH(const CTransaction& tx, vtx)
 	{
@@ -2623,8 +2615,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 	// Check merkle root
 	if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
 		return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
-
-
+	
 	return true;
 }
 
