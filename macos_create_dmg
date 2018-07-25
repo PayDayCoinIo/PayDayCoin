@@ -1,0 +1,5 @@
+#!/bin/sh
+
+/Users/user/Qt/5.6/clang_64/bin/macdeployqt PayDay-Qt.app -dmg -always-overwrite -appstore-compliant
+install_name_tool -change /usr/local/Cellar/openssl/1.0.2n/lib/libcrypto.1.0.0.dylib @executable_path/../Frameworks/libcrypto.1.0.0.dylib PayDay-Qt.app/Contents/Frameworks/libssl.1.0.0.dylib
+/Users/user/Qt/5.6/clang_64/bin/macdeployqt PayDay-Qt.app -dmg -always-overwrite -appstore-compliant
