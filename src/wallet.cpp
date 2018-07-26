@@ -769,14 +769,15 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
     // recomputed, also:
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        if (mapWallet.count(txin.prevout.hash)) {
-            LogPrintf("Transaction Dirty: %s\n",txin.prevout.hash.ToString());
+        if (mapWallet.count(txin.prevout.hash))
 			mapWallet[txin.prevout.hash].MarkDirty();
-		}
     }
 
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
+			
             if (item.second.GetDepthInMainChain(false) == -1 ) {
+               CTxDB txdb("r");
+               if ( txdb.ContainsTx(item.second.GetHash())) LogPrintf("Exist conflicted transaction: %s\n",item.second.GetHash().ToString());
                 LogPrintf("Conflicted transaction: %s\n",item.second.GetHash().ToString());
             }
     }

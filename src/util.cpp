@@ -237,11 +237,12 @@ static void DebugPrintInit()
     assert(fileout == NULL);
     assert(mutexDebugLog == NULL);
 
-    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+    boost::filesystem::path pathDebug = GetDataDir(false) / "debug.log";
     fileout = fopen(pathDebug.string().c_str(), "a");
     if (fileout) setbuf(fileout, NULL); // unbuffered
 
     mutexDebugLog = new boost::mutex();
+
 }
 
 bool LogAcceptCategory(const char* category)
@@ -293,7 +294,7 @@ int LogPrintStr(const std::string &str)
         // reopen the log file, if requested
         if (fReopenDebugLog) {
             fReopenDebugLog = false;
-            boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+            boost::filesystem::path pathDebug = GetDataDir(false) / "debug.log";
             if (freopen(pathDebug.string().c_str(),"a",fileout) != NULL)
                 setbuf(fileout, NULL); // unbuffered
         }
@@ -1263,9 +1264,9 @@ std::string bytesReadable(uint64_t nBytes)
 void ShrinkDebugFile()
 {
     // Scroll debug.log if it's getting too big
-    boost::filesystem::path pathLog = GetDataDir() / "debug.log";
-    FILE* file = fopen(pathLog.string().c_str(), "r");
-    if (file && boost::filesystem::file_size(pathLog) > 10 * 1000000)
+    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+    FILE* file = fopen(pathDebug.string().c_str(), "r");
+    if (file && boost::filesystem::file_size(pathDebug) > 10 * 1000000)
     {
         // Restart the file with some of the end
         char pch[200000];
@@ -1273,7 +1274,7 @@ void ShrinkDebugFile()
         int nBytes = fread(pch, 1, sizeof(pch), file);
         fclose(file);
 
-        file = fopen(pathLog.string().c_str(), "w");
+        file = fopen(pathDebug.string().c_str(), "w");
         if (file)
         {
             fwrite(pch, 1, nBytes, file);
