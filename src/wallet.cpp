@@ -693,20 +693,6 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
             if (!wtx.WriteToDisk())
                 return false;
 
-		/*
-		LogPrintf("Check transaction to conflicts: %s, %s\n", wtxIn.GetHash().ToString(), wtx.GetHash().ToString());
-		
-		BOOST_FOREACH(const uint256& conflict, wtxIn.GetConflicts())
-		{
-			if (!conflict.GetHex().empty()) {
-				LogPrintf("Transaction '%s' have conflicts with '%s\n'", wtxIn.GetHash().ToString(), conflict.GetHex().c_str());
-			} else
-			{
-				LogPrintf("Transaction '%s' don't have conflicts.\n", wtxIn.GetHash().ToString());
-			}
-		}
-		*/
-		
         // Break debit/credit balance caches:
         wtx.MarkDirty();
 
@@ -776,9 +762,8 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
 			
             if (item.second.GetDepthInMainChain(false) == -1 ) {
-               CTxDB txdb("r");
-               if ( txdb.ContainsTx(item.second.GetHash())) LogPrintf("Exist conflicted transaction: %s\n",item.second.GetHash().ToString());
-                LogPrintf("Conflicted transaction: %s\n",item.second.GetHash().ToString());
+			   NotifyTransactionChanged(this, item.first, CT_DELETED);
+               EraseFromWallet(item.first);
             }
     }
 	
@@ -788,7 +773,6 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
         if (tx.IsCoinStake())
         {
             if (IsFromMe(tx)) {
-                LogPrintf("Disable Transaction: %s", tx.ToString());
 				DisableTransaction(tx);
 			}
         }
@@ -801,7 +785,8 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
 void CWallet::EraseFromWallet(const uint256 &hash)
 {
     if (!fFileBacked)
-        return;
+			return;
+	
     {
         LOCK(cs_wallet);
         if (mapWallet.erase(hash))

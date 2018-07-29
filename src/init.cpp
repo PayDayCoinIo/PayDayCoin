@@ -543,10 +543,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!lock.try_lock())
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s. PayDay is probably already running."), strDataDir));
 
-	boost::filesystem::path pathDebug = GetDataDir() / "debug-.log";
-    FILE* file2 = fopen(pathDebug.string().c_str(), "a"); // empty lock file; created if it doesn't exist.
-	if (file2) fclose(file2);
-	
     if (GetBoolArg("-shrinkdebugfile", !fDebug))
         ShrinkDebugFile();
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
