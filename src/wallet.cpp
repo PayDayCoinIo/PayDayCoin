@@ -759,12 +759,16 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
 			mapWallet[txin.prevout.hash].MarkDirty();
     }
 
-    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
-			
+    if (!IsInitialBlockDownload()) {
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
             if (item.second.GetDepthInMainChain(false) == -1 ) {
-			   NotifyTransactionChanged(this, item.first, CT_DELETED);
+				LogPrintf("Remove transaction: %s \n", item.first.ToString());
+               NotifyTransactionChanged(this, item.first, CT_DELETED);
+               if (mapWallet.count(item.first))
+                   mapWallet[item.first].MarkDirty();
                EraseFromWallet(item.first);
             }
+        }
     }
 	
     if (!fConnect)
