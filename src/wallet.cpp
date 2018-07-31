@@ -759,18 +759,7 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
 			mapWallet[txin.prevout.hash].MarkDirty();
     }
 
-    if (!IsInitialBlockDownload()) {
-        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
-            if (item.second.GetDepthInMainChain(false) == -1 ) {
-				LogPrintf("Remove transaction: %s \n", item.first.ToString());
-               NotifyTransactionChanged(this, item.first, CT_DELETED);
-               if (mapWallet.count(item.first))
-                   mapWallet[item.first].MarkDirty();
-               EraseFromWallet(item.first);
-            }
-        }
-    }
-	
+
     if (!fConnect)
     {
         // wallets need to refund inputs when disconnecting coinstake
@@ -784,6 +773,20 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
     }
 
     AddToWalletIfInvolvingMe(tx, pblock, true);
+	
+    if (!IsInitialBlockDownload()) {
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
+            if (item.first == tx.GetHash()) continue;
+            if (item.second.GetDepthInMainChain(false) == -1 ) {
+				LogPrintf("Remove transaction: %s \n", item.first.ToString());
+               NotifyTransactionChanged(this, item.first, CT_DELETED);
+               if (mapWallet.count(item.first))
+                   mapWallet[item.first].MarkDirty();
+               EraseFromWallet(item.first);
+            }
+        }
+    }
+	
 }
 
 void CWallet::EraseFromWallet(const uint256 &hash)
