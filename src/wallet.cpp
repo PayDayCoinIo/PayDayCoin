@@ -746,6 +746,18 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
 void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool fConnect)
 {
     LOCK2(cs_main, cs_wallet);
+	
+	if (!IsInitialBlockDownload()) {
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
+            if (item.first == tx.GetHash()) continue;
+			if (item.second.IsInMainChain()) continue;
+            if (item.second.GetDepthInMainChain(false) == -1 ) {
+               NotifyTransactionChanged(this, item.first, CT_DELETED);
+               EraseFromWallet(item.first);
+            }
+        }
+    }
+	
     if (!AddToWalletIfInvolvingMe(tx, pblock, true))
         return; // Not one of ours
 	
@@ -774,18 +786,7 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
 
     AddToWalletIfInvolvingMe(tx, pblock, true);
 	
-    if (!IsInitialBlockDownload()) {
-        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
-            if (item.first == tx.GetHash()) continue;
-            if (item.second.GetDepthInMainChain(false) == -1 ) {
-				LogPrintf("Remove transaction: %s \n", item.first.ToString());
-               NotifyTransactionChanged(this, item.first, CT_DELETED);
-               //if (mapWallet.count(item.first))
-               //    mapWallet[item.first].MarkDirty();
-               EraseFromWallet(item.first);
-            }
-        }
-    }
+
 	
 }
 

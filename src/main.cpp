@@ -1239,7 +1239,6 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock)
 		if (tx.ReadFromDisk(txdb, hash, txindex))
 		{
 			
-			LogPrintf("GetTransaction: read first\n");
 			CBlock block;
 			if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
 				hashBlock = block.GetHash();
@@ -1248,7 +1247,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock)
 		// look for transaction in disconnected blocks to find orphaned CoinBase and CoinStake transactions
 		BOOST_FOREACH(PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
 		{
-			LogPrintf("GetTransaction: from orphan\n");
+
 			CBlockIndex* pindex = item.second;
 			if (pindex == pindexBest || pindex->pnext != 0)
 				continue;
