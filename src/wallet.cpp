@@ -745,23 +745,14 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
 
 void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool fConnect)
 {
+
+    RemoveConflictedTransactions(tx);
+
     LOCK2(cs_main, cs_wallet);
-	
-	if (!IsInitialBlockDownload()) {
-        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
-            if (item.first == tx.GetHash()) continue;
-			if (item.second.IsInMainChain()) continue;
-            if (item.second.GetDepthInMainChain(false) == -1 ) {
-               NotifyTransactionChanged(this, item.first, CT_DELETED);
-               EraseFromWallet(item.first);
-            }
-        }
-    }
-	
     if (!AddToWalletIfInvolvingMe(tx, pblock, true))
         return; // Not one of ours
-	
-	
+
+
     // If a transaction changes 'conflicted' state, that changes the balance
     // available of the outputs it spends. So force those to be
     // recomputed, also:
@@ -785,16 +776,37 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock, bool
     }
 
     AddToWalletIfInvolvingMe(tx, pblock, true);
-	
 
-	
+
+}
+
+void CWallet::RemoveConflictedTransactions(const CTransaction& tx)
+{
+    LOCK2(cs_main, cs_wallet);
+    vector<uint256> ToErase;
+
+    if (!IsInitialBlockDownload()) {
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
+            if (item.first == tx.GetHash() || item.second.IsInMainChain()) continue;
+            if (item.second.GetDepthInMainChain(false) == -1 ) {
+               ToErase.push_back(item.first);
+            }
+        }
+    }
+
+    BOOST_FOREACH(const uint256& thash, ToErase)
+    {
+	LogPrintf("Erase Transaction: %s\n", thash.ToString());
+        NotifyTransactionChanged(this, thash, CT_DELETED);
+        EraseFromWallet(thash);
+    }
+    ToErase.clear();
 }
 
 void CWallet::EraseFromWallet(const uint256 &hash)
 {
     if (!fFileBacked)
 			return;
-	
     {
         LOCK(cs_wallet);
         if (mapWallet.erase(hash))
