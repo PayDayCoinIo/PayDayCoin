@@ -2530,9 +2530,9 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 					// If we don't already have its previous block, skip masternode payment step
 				    CAmount masternodePaymentAmount;
 					for (int i = vtx[1].vout.size(); i-- > 0; ) {
-							masternodePaymentAmount = vtx[1].vout[i].nValue;
-							LogPrintf("Masternode payment amount: %d\n", vtx[1].vout[i].nValue );
-							break;
+                        masternodePaymentAmount = vtx[1].vout[i].nValue;
+                        LogPrintf("Masternode payment amount: %d\n", vtx[1].vout[i].nValue );
+                        break;
 					}
 					bool foundPaymentAmount = false;
 					bool foundPayee = false;
