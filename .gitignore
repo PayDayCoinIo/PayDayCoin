@@ -1,1 +1,9 @@
+Makefile*
 src/PayDayd
+PayDayCoin-qt.pro.user
+src/qt/locale/bitcoin_*.qm
+object_script.PayDayCoin-qt.*
+paydaycoin-qt_plugin_import.cpp
+build
+release
+uic_wrapper.*

@@ -36,5 +36,11 @@ build-aux/m4/ltoptions.m4
 build-aux/m4/ltsugar.m4
 build-aux/m4/ltversion.m4
 build-aux/m4/lt~obsolete.m4
+build-aux/compile
+build-aux/config.*
+build-aux/depcomp
+build-aux/install-sh
+build-aux/ltmain.sh
+build-aux/missing
 src/stamp-h1
 libsecp256k1.pc
