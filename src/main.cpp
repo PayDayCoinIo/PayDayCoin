@@ -2531,13 +2531,12 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 				    CAmount masternodePaymentAmount;
 					for (int i = vtx[1].vout.size(); i-- > 0; ) {
                         masternodePaymentAmount = vtx[1].vout[i].nValue;
-                        LogPrintf("Masternode payment amount: %d\n", vtx[1].vout[i].nValue );
                         break;
 					}
 					bool foundPaymentAmount = false;
 					bool foundPayee = false;
 					bool foundPaymentAndPayee = false;
-					CScript payeerewardaddress = CScript();
+					//CScript payeerewardaddress = CScript();
 					string targetNode;
 					CScript payee;
 					CTxIn vin;
@@ -2545,16 +2544,16 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 							CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
 							if (winningNode) {
 								payee = GetScriptForDestination(winningNode->pubkey.GetID());
-								payeerewardaddress = winningNode->donationAddress;
+								//payeerewardaddress = winningNode->donationAddress;
 								CTxDestination address1;
 								ExtractDestination(payee, address1);
 								CPayDaycoinAddress address2(address1);
 
-								CTxDestination address3;
-								ExtractDestination(payeerewardaddress, address3);
-								CPayDaycoinAddress address4(address3);
+								//CTxDestination address3;
+								//ExtractDestination(payeerewardaddress, address3);
+								//CPayDaycoinAddress address4(address3);
 								targetNode = address2.ToString().c_str();
-								LogPrintf("Masternode winner address: %s\n", targetNode);
+								if (fDebug) LogPrintf("Masternode winner address: %s\n", targetNode);
 
 							}
 							else
@@ -2562,7 +2561,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 								foundPayee = true; //doesn't require a specific payee
 								foundPaymentAmount = true;
 								foundPaymentAndPayee = true;
-								LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
+								if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
 							}
 					}
 
@@ -2570,7 +2569,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 							CTxDestination address1;
 							ExtractDestination(vtx[1].vout[i].scriptPubKey, address1);
 							CPayDaycoinAddress address2(address1);
-							LogPrintf("Payment size is  %s\n", vtx[1].vout[i].nValue);
+							//LogPrintf("Payment size is  %s\n", vtx[1].vout[i].nValue);
 							if (vtx[1].vout[i].nValue == masternodePaymentAmount)
 									foundPaymentAmount = true;
 							if (vtx[1].vout[i].scriptPubKey == payee)
@@ -2606,13 +2605,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 	else {
 		if (fDebug) { LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", pindexBest->nHeight + 1); }
 	}
-
-
-
-
-
-
-
 
 
 	// Check transactions
