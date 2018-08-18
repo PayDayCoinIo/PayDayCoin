@@ -524,7 +524,7 @@ OTHER_FILES += \
 
 # platform specific defaults, if not overridden on command line
 isEmpty(BOOST_LIB_SUFFIX) {
-    #macx:BOOST_LIB_SUFFIX = -mt
+    macx:BOOST_LIB_SUFFIX = -mt
     windows:BOOST_LIB_SUFFIX=-mgw49-mt-s-1_57
 }
 
@@ -535,7 +535,7 @@ isEmpty(BOOST_THREAD_LIB_SUFFIX) {
 }
 
 isEmpty(BDB_LIB_PATH) {
-    macx:BDB_LIB_PATH = /usr/local/Cellar/berkeley-db4/4.8.30/lib
+    macx:BDB_LIB_PATH = /usr/local/Cellar/berkeley-db@4/4.8.30/lib
     windows:BDB_LIB_PATH=$$PWD/../depencies/db-6.0.35.NC/build_windows
 }
 
@@ -544,27 +544,27 @@ isEmpty(BDB_LIB_SUFFIX) {
 }
 
 isEmpty(BDB_INCLUDE_PATH) {
-    macx:BDB_INCLUDE_PATH = /usr/local/Cellar/berkeley-db4/4.8.30/include
+    macx:BDB_INCLUDE_PATH = /usr/local/Cellar/berkeley-db@4/4.8.30/include
     windows:BDB_INCLUDE_PATH=$$PWD/../depencies/db-6.0.35.NC/build_windows
 }
 
 isEmpty(BOOST_LIB_PATH) {
-    macx:BOOST_LIB_PATH = /usr/local/Cellar/boost_1_57_0/stage/lib
+    macx:BOOST_LIB_PATH = /usr/local/Cellar/boost@1.59/1.59.0/lib
     windows:BOOST_LIB_PATH=$$PWD/../depencies/boost_1_57_0/stage/lib
 }
 
 isEmpty(BOOST_INCLUDE_PATH) {
-    macx:BOOST_INCLUDE_PATH = /usr/local/Cellar/boost_1_57_0
+    macx:BOOST_INCLUDE_PATH = /usr/local/Cellar/boost@1.59/1.59.0/include
     windows:BOOST_INCLUDE_PATH=$$PWD/../depencies/boost_1_57_0
 }
 
 isEmpty(QRENCODE_LIB_PATH) {
-    macx:QRENCODE_LIB_PATH = /usr/local/Cellar/qrencode/4.0.0/lib
+    macx:QRENCODE_LIB_PATH = /usr/local/Cellar/qrencode/4.0.2/lib
         windows:QRENCODE_LIB_PATH = $$PWD/../depencies/qrencode-3.4.4/.libs
 }
 
 isEmpty(QRENCODE_INCLUDE_PATH) {
-    macx:QRENCODE_INCLUDE_PATH = /usr/local/Cellar/qrencode/4.0.0/include
+    macx:QRENCODE_INCLUDE_PATH = /usr/local/Cellar/qrencode/4.0.2/include
         windows:QRENCODE_INCLUDE_PATH = $$PWD/../depencies/qrencode-3.4.4
 }
 
@@ -573,22 +573,22 @@ isEmpty(MINIUPNPC_LIB_SUFFIX) {
 }
 
 isEmpty(MINIUPNPC_INCLUDE_PATH) {
-    macx:MINIUPNPC_INCLUDE_PATH=/usr/local/Cellar/miniupnpc/2.0.20180222/include
+    macx:MINIUPNPC_INCLUDE_PATH=/usr/local/Cellar/miniupnpc/2.1/include
     windows:MINIUPNPC_INCLUDE_PATH=$$PWD/../depencies/
 }
 
 isEmpty(MINIUPNPC_LIB_PATH) {
-    macx:MINIUPNPC_LIB_PATH=/usr/local/Cellar/miniupnpc/2.0.20180222/lib
+    macx:MINIUPNPC_LIB_PATH=/usr/local/Cellar/miniupnpc/2.1/lib
     windows:MINIUPNPC_LIB_PATH=$$PWD/../depencies/miniupnpc
 }
 
 isEmpty(OPENSSL_INCLUDE_PATH) {
-    macx:OPENSSL_INCLUDE_PATH = /usr/local/Cellar/openssl/1.0.2n/include
+    macx:OPENSSL_INCLUDE_PATH = /usr/local/Cellar/openssl/1.0.2o_2/include
     windows:OPENSSL_INCLUDE_PATH=$$PWD/../depencies/openssl-1.0.1l/include
 }
 
 isEmpty(OPENSSL_LIB_PATH) {
-    macx:OPENSSL_LIB_PATH = /usr/local/Cellar/openssl/1.0.2n/lib
+    macx:OPENSSL_LIB_PATH = /usr/local/Cellar/openssl/1.0.2o_2/lib
     windows:OPENSSL_LIB_PATH=$$PWD/../depencies/openssl-1.0.1l
 }
 
@@ -641,7 +641,7 @@ LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
 windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
 !windows: {
-    LIBGMP_PATH=/usr/local/Cellar/gmp/6.1.2_1/lib/
+    LIBGMP_PATH=/usr/local/Cellar/gmp/6.1.2_2/lib/
     LIBS += $$join(LIBGMP_PATH,,-L) -lgmp
 } else {
     INCLUDEPATH += $$SECP256K1_INCLUDE_PATH
