@@ -630,7 +630,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             LogPrintf("dsee - donation percentage out of range %d\n", donationPercentage);
             return;     
         }
-        if(protocolVersion < MIN_POOL_PEER_PROTO_VERSION) {
+        if(protocolVersion < GetPoolPeerProtoVersion()) {
             LogPrintf("dsee - ignoring outdated masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
             return;
         }
@@ -809,7 +809,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         // see if we have this masternode
         CMasternode* pmn = this->Find(vin);
-        if(pmn != NULL && pmn->protocolVersion >= MIN_POOL_PEER_PROTO_VERSION)
+        if(pmn != NULL && pmn->protocolVersion >= GetPoolPeerProtoVersion())
         {
             // LogPrintf("dseep - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
             // take this only if it's newer
