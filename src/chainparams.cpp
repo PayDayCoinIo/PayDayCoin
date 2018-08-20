@@ -62,7 +62,7 @@ public:
         pchMessageStart[1] = 0x2a;
         pchMessageStart[2] = 0xd3;
         pchMessageStart[3] = 0x8e;
-        vAlertPubKey = ParseHex("04e317aba52be44f4cb4fb5a030fa014328cc85415dcdd1172cfaca76af8dd39f58c99b2ff743fd742cdaa2641d6817aa861e60bf751c029c2703f08dc726f1cd2");
+        vAlertPubKey = ParseHex("04cc910b2c4583555ba81ebe8a9aa14db6a4946f8d8cd52b931be68071885504b19c179852815e9b32610fd6cb740b2ddeb02a0450bbc0d12d1c12950f321867e8");
         nDefaultPort = 7214;
         nRPCPort = 7215;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 16);
@@ -72,14 +72,14 @@ public:
             // CTxIn(COutPoint(0000000000, 4294967295), coinbase 00012a284f63742032322c20323031373a20426974636f696e2070726963652061626f76652024362c303030)
             // CTxOut(empty)
 
-        const char* pszTimestamp = "Start PayDay Coin at Thursday, 12-Apr-18 11:05:00 UTC (Test)";
+        const char* pszTimestamp = "Start PayDay Coin at Thursday, 12-Apr-18 11:05:00 UTC";
         std::vector<CTxIn> vin;
         vin.resize(1);
         vin[0].scriptSig = CScript() << 0 << CBigNum(42) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         std::vector<CTxOut> vout;
         vout.resize(1);
         vout[0].SetEmpty();
-        CTransaction txNew(1, 1531180800, vin, vout, 0);
+        CTransaction txNew(1, 1523531100, vin, vout, 0);
 
         //LogPrintf("Genesis mainnet Transaction:  %s\n", txNew.ToString().c_str());
 
@@ -88,12 +88,12 @@ public:
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
         genesis.nVersion = 1;
-        genesis.nTime    = 1531180800;
+        genesis.nTime    = 1523531100;
         genesis.nBits = 504365040; // bnProofOfWorkLimit.GetCompact();
         genesis.nNonce   = 10285;
 
         hashGenesisBlock = genesis.GetHash();
-        if (hashGenesisBlock != uint256("0xab30243637bca168f3213787b5d07bbca243979775177c77399789ee0ce2279f") ) {
+        if (hashGenesisBlock != uint256("0xfbf8f2c6c429973be775cac61bcb7eb3dac0d95d134a63d91d505608f3febadc") ) {
             LogPrintf("================Genesis error===================\n");
             LogPrintf("Genesis hash: %s \n", genesis.GetHash().ToString().c_str());
             LogPrintf("Genesis nTime: %s \n", genesis.nTime);
@@ -103,8 +103,8 @@ public:
             LogPrintf("===================================\n");
         }
 		
-        assert(hashGenesisBlock == uint256("0xab30243637bca168f3213787b5d07bbca243979775177c77399789ee0ce2279f"));
-        assert(genesis.hashMerkleRoot == uint256("0xcf2729d78f32609b40fd734e73ffc00d52ba57bbf14dfbfceac799b0a1962560"));
+        assert(hashGenesisBlock == uint256("0xfbf8f2c6c429973be775cac61bcb7eb3dac0d95d134a63d91d505608f3febadc"));
+        assert(genesis.hashMerkleRoot == uint256("0x306e9995cae4eaadbb512464c8c1b3c7195bf84bc88caf3c4282fd1d49b67d3d"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,50);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,85);
@@ -112,7 +112,7 @@ public:
         base58Prefixes[STEALTH_ADDRESS] = std::vector<unsigned char>(1,43);
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
-/*
+
         vSeeds.push_back(CDNSSeedData("a.paydaycoin.io",  "a.paydaycoin.io"));
         vSeeds.push_back(CDNSSeedData("b.paydaycoin.io",  "b.paydaycoin.io"));
         vSeeds.push_back(CDNSSeedData("c.paydaycoin.io",  "c.paydaycoin.io"));
@@ -123,7 +123,7 @@ public:
         vSeeds.push_back(CDNSSeedData("h.paydaycoin.io",  "h.paydaycoin.io"));
         vSeeds.push_back(CDNSSeedData("i.paydaycoin.io",  "i.paydaycoin.io"));
         vSeeds.push_back(CDNSSeedData("j.paydaycoin.io",  "j.paydaycoin.io"));
-*/
+
         convertSeeds(vFixedSeeds, pnSeed, ARRAYLEN(pnSeed), nDefaultPort);
         //vFixedSeeds.clear();
         //vSeeds.clear();
@@ -135,8 +135,8 @@ public:
         //strMasternodePaymentsPubKey = "046f78dcf911fbd61910136f7f0f8d90578f68d0b3ac973b5040fb7afb501b5939f39b108b0569dca71488f5bbf498d92e4d1194f6f941307ffd95f75e76869f0e";
         strDarksendPoolDummyAddress = "MWc1TrChdsnY7bPJbQDeyhkyeC8YHmzrx1";
 
-        nLastPOWBlock = 100000;
-        nPOSStartBlock = 1200;
+        nLastPOWBlock = 10000;
+        nPOSStartBlock = 7000;
     }
 
     virtual const CBlock& GenesisBlock() const { return genesis; }
@@ -167,13 +167,13 @@ public:
         pchMessageStart[2] = 0x3d;
         pchMessageStart[3] = 0xe8;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 16);
-        vAlertPubKey = ParseHex("04e317aba52be44f4cb4fb5a030fa014328cc85415dcdd1172cfaca76af8dd39f58c99b2ff743fd742cdaa2641d6817aa861e60bf751c029c2703f08dc726f1cd2");
+        vAlertPubKey = ParseHex("04cc910b2c4583555ba81ebe8a9aa14db6a4946f8d8cd52b931be68071885504b19c179852815e9b32610fd6cb740b2ddeb02a0450bbc0d12d1c12950f321867e8");
         nDefaultPort = 7214;
         nRPCPort = 7215;
         strDataDir = "testnet";
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0xab30243637bca168f3213787b5d07bbca243979775177c77399789ee0ce2279f"));
+        assert(hashGenesisBlock == uint256("0xfbf8f2c6c429973be775cac61bcb7eb3dac0d95d134a63d91d505608f3febadc"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
