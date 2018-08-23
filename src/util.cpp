@@ -146,12 +146,6 @@ public:
 }
 instance_of_cinit;
 
-int ProtocolVersion()
-{
-    if (GetTime() < UPGDATE_WALLET_VERSION_DATE) return PROTOCOL_VERSION_V1;
-    return PROTOCOL_VERSION_V2;
-}
-
 bool GetRandBytes(unsigned char *buf, int num)
 {
     if (RAND_bytes(buf, num) == 0) {

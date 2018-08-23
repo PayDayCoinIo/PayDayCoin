@@ -269,7 +269,7 @@ void MultisigDialog::on_createTransactionButton_clicked()
         }
     }
 
-    CDataStream ss(SER_NETWORK, ProtocolVersion());
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << transaction;
     ui->transaction->setText(HexStr(ss.begin(), ss.end()).c_str());
 }
@@ -288,7 +288,7 @@ void MultisigDialog::on_transaction_textChanged()
 
     // Decode the raw transaction
     std::vector<unsigned char> txData(ParseHex(ui->transaction->text().toStdString()));
-    CDataStream ss(txData, SER_NETWORK, ProtocolVersion());
+    CDataStream ss(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
     try
     {
@@ -358,7 +358,7 @@ void MultisigDialog::on_signTransactionButton_clicked()
 
     // Decode the raw transaction
     std::vector<unsigned char> txData(ParseHex(ui->transaction->text().toStdString()));
-    CDataStream ss(txData, SER_NETWORK, ProtocolVersion());
+    CDataStream ss(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
     try
     {
@@ -432,7 +432,7 @@ void MultisigDialog::on_signTransactionButton_clicked()
         }
     }
 
-    CDataStream ssTx(SER_NETWORK, ProtocolVersion());
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << mergedTx;
     ui->signedTransaction->setText(HexStr(ssTx.begin(), ssTx.end()).c_str());
 
@@ -477,7 +477,7 @@ void MultisigDialog::on_sendTransactionButton_clicked()
 
     // Decode the raw transaction
     std::vector<unsigned char> txData(ParseHex(ui->signedTransaction->text().toStdString()));
-    CDataStream ssData(txData, SER_NETWORK, ProtocolVersion());
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
     try
     {

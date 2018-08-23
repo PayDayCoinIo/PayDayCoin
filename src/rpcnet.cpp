@@ -269,11 +269,11 @@ Value sendalert(const Array& params, bool fHelp)
     alert.nID = params[5].get_int();
     if (params.size() > 6)
         alert.nCancel = params[6].get_int();
-    alert.nVersion = ProtocolVersion();
+    alert.nVersion = PROTOCOL_VERSION;
     alert.nRelayUntil = GetAdjustedTime() + 365*24*60*60;
     alert.nExpiration = GetAdjustedTime() + 365*24*60*60;
 
-    CDataStream sMsg(SER_NETWORK, ProtocolVersion());
+    CDataStream sMsg(SER_NETWORK, PROTOCOL_VERSION);
     sMsg << (CUnsignedAlert)alert;
     alert.vchMsg = vector<unsigned char>(sMsg.begin(), sMsg.end());
 

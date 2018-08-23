@@ -127,7 +127,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
     if (!GetTransaction(hash, tx, hashBlock))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
-    CDataStream ssTx(SER_NETWORK, ProtocolVersion());
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << tx;
     string strHex = HexStr(ssTx.begin(), ssTx.end());
 
@@ -290,7 +290,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         rawTx.vout.push_back(out);
     }
 
-    CDataStream ss(SER_NETWORK, ProtocolVersion());
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << rawTx;
     return HexStr(ss.begin(), ss.end());
 }
@@ -305,7 +305,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
     RPCTypeCheck(params, list_of(str_type));
 
     vector<unsigned char> txData(ParseHex(params[0].get_str()));
-    CDataStream ssData(txData, SER_NETWORK, ProtocolVersion());
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
     try {
         ssData >> tx;
@@ -366,7 +366,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     RPCTypeCheck(params, list_of(str_type)(array_type)(array_type)(str_type), true);
 
     vector<unsigned char> txData(ParseHex(params[0].get_str()));
-    CDataStream ssData(txData, SER_NETWORK, ProtocolVersion());
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     vector<CTransaction> txVariants;
     while (!ssData.empty())
     {
@@ -545,7 +545,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     }
 
     Object result;
-    CDataStream ssTx(SER_NETWORK, ProtocolVersion());
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << mergedTx;
     result.push_back(Pair("hex", HexStr(ssTx.begin(), ssTx.end())));
     result.push_back(Pair("complete", fComplete));
@@ -564,7 +564,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
 
     // parse hex string from parameter
     vector<unsigned char> txData(ParseHex(params[0].get_str()));
-    CDataStream ssData(txData, SER_NETWORK, ProtocolVersion());
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
 
     // deserialize binary data stream
@@ -648,7 +648,7 @@ Value searchrawtransactions(const Array &params, bool fHelp)
 	else
 	{
 
-        CDataStream ssTx(SER_NETWORK, ProtocolVersion());
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << tx;
         string strHex = HexStr(ssTx.begin(), ssTx.end());
         if (fVerbose) {
