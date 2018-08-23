@@ -63,7 +63,7 @@ Value getstakesubsidy(const Array& params, bool fHelp)
 	RPCTypeCheck(params, list_of(str_type));
 
 	vector<unsigned char> txData(ParseHex(params[0].get_str()));
-	CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+	CDataStream ssData(txData, SER_NETWORK, ProtocolVersion());
 	CTransaction tx;
 	try {
 		ssData >> tx;
@@ -235,7 +235,7 @@ Value checkkernel(const Array& params, bool fHelp)
 
 	pblock->nTime = pblock->vtx[0].nTime = nTime;
 
-	CDataStream ss(SER_DISK, PROTOCOL_VERSION);
+	CDataStream ss(SER_DISK, ProtocolVersion());
 	ss << *pblock;
 
 	result.push_back(Pair("blocktemplate", HexStr(ss.begin(), ss.end())));
@@ -326,7 +326,7 @@ Value getworkex(const Array& params, bool fHelp)
 		result.push_back(Pair("data", HexStr(BEGIN(pdata), END(pdata))));
 		result.push_back(Pair("target", HexStr(BEGIN(hashTarget), END(hashTarget))));
 
-		CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+		CDataStream ssTx(SER_NETWORK, ProtocolVersion());
 		ssTx << coinbaseTx;
 		result.push_back(Pair("coinbase", HexStr(ssTx.begin(), ssTx.end())));
 
@@ -370,7 +370,7 @@ Value getworkex(const Array& params, bool fHelp)
 		if (coinbase.size() == 0)
 			pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
 		else
-			CDataStream(coinbase, SER_NETWORK, PROTOCOL_VERSION) >> pblock->vtx[0]; // FIXME - HACK!
+			CDataStream(coinbase, SER_NETWORK, ProtocolVersion()) >> pblock->vtx[0]; // FIXME - HACK!
 
 		pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
@@ -678,7 +678,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
 		Object entry;
 
-		CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+		CDataStream ssTx(SER_NETWORK, ProtocolVersion());
 		ssTx << tx;
 		entry.push_back(Pair("data", HexStr(ssTx.begin(), ssTx.end())));
 
@@ -778,7 +778,7 @@ Value submitblock(const Array& params, bool fHelp)
 			"See https://en.bitcoin.it/wiki/BIP_0022 for full specification.");
 
 	vector<unsigned char> blockData(ParseHex(params[0].get_str()));
-	CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
+	CDataStream ssBlock(blockData, SER_NETWORK, ProtocolVersion());
 	CBlock block;
 	try {
 		ssBlock >> block;

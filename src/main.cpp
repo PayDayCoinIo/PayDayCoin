@@ -622,7 +622,7 @@ double CTransaction::ComputePriority(double dPriorityInputs, unsigned int nTxSiz
 	// Providing any more cleanup incentive than making additional inputs free would
 	// risk encouraging people to create junk outputs to redeem later.
 	if (nTxSize == 0)
-		nTxSize = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
+        nTxSize = ::GetSerializeSize(*this, SER_NETWORK, ProtocolVersion());
 	BOOST_FOREACH(const CTxIn& txin, vin)
 	{
 		unsigned int offset = 41U + std::min(110U, (unsigned int)txin.scriptSig.size());
@@ -641,7 +641,7 @@ bool CTransaction::CheckTransaction() const
 	if (vout.empty())
 		return DoS(10, error("CTransaction::CheckTransaction() : vout empty"));
 	// Size limits
-	if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (::GetSerializeSize(*this, SER_NETWORK, ProtocolVersion()) > MAX_BLOCK_SIZE)
 		return DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
 
 	// Check for negative or overflow output values
@@ -817,7 +817,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
 					hash.ToString(), nSigOps, MAX_TX_SIGOPS));
 
 		int64_t nFees = tx.GetValueIn(mapInputs) - tx.GetValueOut();
-		unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, ProtocolVersion());
 
 		// Don't accept it if it can't get into a block
 		// but prioritise dstx and don't check fees for it
@@ -980,7 +980,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
 					hash.ToString(), nSigOps, MAX_TX_SIGOPS));
 
 		int64_t nFees = tx.GetValueIn(mapInputs) - tx.GetValueOut();
-		unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, ProtocolVersion());
 		int64_t txMinFee = GetMinFee(tx, nSize, true, GMF_RELAY);
 
 
@@ -2452,7 +2452,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 	// that can be verified before saving an orphan block.
 
 	// Size limits
-	if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, ProtocolVersion()) > MAX_BLOCK_SIZE)
 		return DoS(100, error("CheckBlock() : size limits failed"));
 
 	// Check proof of work matches claimed amount
@@ -3488,7 +3488,7 @@ void static ProcessGetData(CNode* pfrom)
 
 					CTransaction tx;
 					if (mempool.lookup(inv.hash, tx)) {
-						CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        CDataStream ss(SER_NETWORK, ProtocolVersion());
 						ss.reserve(1000);
 						ss << tx;
 						pfrom->PushMessage("tx", ss);
@@ -3497,7 +3497,7 @@ void static ProcessGetData(CNode* pfrom)
 				}
 				if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
 					if (mapTxLockVote.count(inv.hash)) {
-						CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        CDataStream ss(SER_NETWORK, ProtocolVersion());
 						ss.reserve(1000);
 						ss << mapTxLockVote[inv.hash];
 						pfrom->PushMessage("txlvote", ss);
@@ -3506,7 +3506,7 @@ void static ProcessGetData(CNode* pfrom)
 				}
 				if (!pushed && inv.type == MSG_TXLOCK_REQUEST) {
 					if (mapTxLockReq.count(inv.hash)) {
-						CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        CDataStream ss(SER_NETWORK, ProtocolVersion());
 						ss.reserve(1000);
 						ss << mapTxLockReq[inv.hash];
 						pfrom->PushMessage("txlreq", ss);
@@ -3515,7 +3515,7 @@ void static ProcessGetData(CNode* pfrom)
 				}
 				if (!pushed && inv.type == MSG_SPORK) {
 					if (mapSporks.count(inv.hash)) {
-						CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        CDataStream ss(SER_NETWORK, ProtocolVersion());
 						ss.reserve(1000);
 						ss << mapSporks[inv.hash];
 						pfrom->PushMessage("spork", ss);
@@ -3524,7 +3524,7 @@ void static ProcessGetData(CNode* pfrom)
 				}
 				if (!pushed && inv.type == MSG_MASTERNODE_WINNER) {
 					if (mapSeenMasternodeVotes.count(inv.hash)) {
-						CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        CDataStream ss(SER_NETWORK, ProtocolVersion());
 						ss.reserve(1000);
 						ss << mapSeenMasternodeVotes[inv.hash];
 						pfrom->PushMessage("mnw", ss);
@@ -3533,7 +3533,7 @@ void static ProcessGetData(CNode* pfrom)
 				}
 				if (!pushed && inv.type == MSG_DSTX) {
 					if (mapDarksendBroadcastTxes.count(inv.hash)) {
-						CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        CDataStream ss(SER_NETWORK, ProtocolVersion());
 						ss.reserve(1000);
 						ss <<
 							mapDarksendBroadcastTxes[inv.hash].tx <<
@@ -3639,7 +3639,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
 		// Change version
 		pfrom->PushMessage("verack");
-		pfrom->ssSend.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
+        pfrom->ssSend.SetVersion(min(pfrom->nVersion, ProtocolVersion()));
 
 		if (!pfrom->fInbound)
 		{
@@ -3701,7 +3701,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
 	else if (strCommand == "verack")
 	{
-		pfrom->SetRecvVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
+        pfrom->SetRecvVersion(min(pfrom->nVersion, ProtocolVersion()));
 	}
 
 

@@ -474,8 +474,8 @@ void CNode::PushVersion()
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService("0.0.0.0",0)));
     CAddress addrMe = GetLocalAddress(&addr);
     GetRandBytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-    LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), addr.ToString());
-    PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
+    LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", ProtocolVersion(), nBestHeight, addrMe.ToString(), addrYou.ToString(), addr.ToString());
+    PushMessage("version", ProtocolVersion(), nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, strSubVersion, nBestHeight);
 }
 
@@ -1908,7 +1908,7 @@ instance_of_cnetcleanup;
 
 void RelayTransaction(const CTransaction& tx, const uint256& hash)
 {
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ss(SER_NETWORK, ProtocolVersion());
     ss.reserve(10000);
     ss << tx;
     RelayTransaction(tx, hash, ss);

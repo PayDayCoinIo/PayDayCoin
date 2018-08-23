@@ -227,7 +227,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey, bool fProofOfStake, int64_t* pFe
             if (fMissingInputs) continue;
 
             // Priority is sum(valuein * age) / txsize
-            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, ProtocolVersion());
             dPriority /= nTxSize;
 
             // This is a more accurate fee-per-kilobyte than is used by the client code, because the
@@ -265,7 +265,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey, bool fProofOfStake, int64_t* pFe
             vecPriority.pop_back();
 
             // Size limits
-            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, ProtocolVersion());
             if (nBlockSize + nTxSize >= nBlockMaxSize)
                 continue;
 

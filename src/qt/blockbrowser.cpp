@@ -164,7 +164,7 @@ double getTxTotalValue(std::string txid)
     if (!GetTransaction(hash, tx, hashBlock))
         return 0;
 
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, ProtocolVersion());
     ssTx << tx;
 
     double value = 0;
@@ -195,7 +195,7 @@ std::string getOutputs(std::string txid)
     if (!GetTransaction(hash, tx, hashBlock))
         return "fail";
 
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, ProtocolVersion());
     ssTx << tx;
 
     std::string str = "";
@@ -230,7 +230,7 @@ std::string getInputs(std::string txid)
     if (!GetTransaction(hash, tx, hashBlock))
         return "fail";
 
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, ProtocolVersion());
     ssTx << tx;
 
     std::string str = "";
@@ -244,7 +244,7 @@ std::string getInputs(std::string txid)
         if (!GetTransaction(hash, wtxPrev, hashBlock))
              return "fail";
 
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssTx(SER_NETWORK, ProtocolVersion());
         ssTx << wtxPrev;
 
         CTxDestination source;
@@ -290,7 +290,7 @@ double getTxFees(std::string txid)
     if (!GetTransaction(hash, tx, hashBlock))
         return 0;
 
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, ProtocolVersion());
     ssTx << tx;
 
     double value = 0;
@@ -314,7 +314,7 @@ double getTxFees(std::string txid)
         uint256 hashBlock0 = 0;
         if (!GetTransaction(hash0, wtxPrev, hashBlock0))
              return 0;
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssTx(SER_NETWORK, ProtocolVersion());
         ssTx << wtxPrev;
         const CScript target = wtxPrev.vout[vin.prevout.n].scriptPubKey;
         buffer0 = value0 + convertCoins(getInputValue(wtxPrev, target));

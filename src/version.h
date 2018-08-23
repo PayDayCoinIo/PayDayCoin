@@ -30,7 +30,10 @@ static const int DATABASE_VERSION = 70509;
 // network protocol versioning
 //
 
-static const int PROTOCOL_VERSION = 60028;
+static const unsigned int UPGDATE_WALLET_VERSION_DATE = 1535238000; // Saturday, 25-Aug-18 23:00:00 UTC
+
+static const int PROTOCOL_VERSION_V1 = 60027;
+static const int PROTOCOL_VERSION_V2 = 60028;
 
 // intial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
