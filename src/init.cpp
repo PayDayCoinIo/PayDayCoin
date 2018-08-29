@@ -563,7 +563,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     //ignore masternodes below protocol version
-    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", MIN_POOL_PEER_PROTO_VERSION);
+    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", GetPoolPeerProtoVersion());
 
     if (fDaemon)
         fprintf(stdout, "PayDay server starting\n");

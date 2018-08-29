@@ -234,14 +234,15 @@ bool CAlert::ProcessAlert(bool fThread)
         {
             uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
             std::string strCmd = GetArg("-alertnotify", "");
+			std::string singleQuote("'");
+            std::string safeStatus = SanitizeString(strStatusBar);
+            safeStatus = singleQuote+safeStatus+singleQuote;
             if (!strCmd.empty())
             {
                 // Alert text should be plain ascii coming from a trusted source, but to
                 // be safe we first strip anything not in safeChars, then add single quotes around
                 // the whole string before passing it to the transfer:
-                std::string singleQuote("'");
-                std::string safeStatus = SanitizeString(strStatusBar);
-                safeStatus = singleQuote+safeStatus+singleQuote;
+
                 boost::replace_all(strCmd, "%s", safeStatus);
 
                 if (fThread)
@@ -249,6 +250,7 @@ bool CAlert::ProcessAlert(bool fThread)
                 else
                     runCommand(strCmd);
             }
+			LogPrintf("AlertNotify() Received message: %s\n", safeStatus);
         }
     }
 

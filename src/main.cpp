@@ -2528,36 +2528,72 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 			if (IsProofOfStake() && pindex != NULL) {
 				if (pindex->GetBlockHash() == hashPrevBlock) {
 					// If we don't already have its previous block, skip masternode payment step
-					CAmount masternodePaymentAmount;
+				    CAmount masternodePaymentAmount;
 					for (int i = vtx[1].vout.size(); i-- > 0; ) {
-						masternodePaymentAmount = vtx[1].vout[i].nValue;
-						break;
+                        masternodePaymentAmount = vtx[1].vout[i].nValue;
+                        break;
 					}
 					bool foundPaymentAmount = false;
 					bool foundPayee = false;
 					bool foundPaymentAndPayee = false;
-
+					//CScript payeerewardaddress = CScript();
+					string targetNode;
 					CScript payee;
 					CTxIn vin;
-					if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, payee, vin) || payee == CScript()) {
-						foundPayee = true; //doesn't require a specific payee
-						foundPaymentAmount = true;
-						foundPaymentAndPayee = true;
-						if (fDebug) { LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1); }
-					}
+                    if (nTime < UPGDATE_WALLET_VERSION_DATE) {
+                        if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, payee, vin) || payee == CScript()) {
+                            foundPayee = true; //doesn't require a specific payee
+                            foundPaymentAmount = true;
+                            foundPaymentAndPayee = true;
+                            if (fDebug) { LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1); }
+                        }
+                    } else {
+                    
+                        if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, payee, vin)) {
+                            CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
+                            if (winningNode) {
+                                payee = GetScriptForDestination(winningNode->pubkey.GetID());
+                                //payeerewardaddress = winningNode->donationAddress;
+                                CTxDestination address1;
+                                ExtractDestination(payee, address1);
+                                CPayDaycoinAddress address2(address1);
+
+                                //CTxDestination address3;
+                                //ExtractDestination(payeerewardaddress, address3);
+                                //CPayDaycoinAddress address4(address3);
+                                targetNode = address2.ToString().c_str();
+                                //LogPrintf("Masternode winner address: %s\n", targetNode);
+
+                            }
+                            else
+                            {
+                                foundPayee = true; //doesn't require a specific payee
+                                foundPaymentAmount = true;
+                                foundPaymentAndPayee = true;
+                                if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
+                            }
+                        }
+                    }
 
 					for (unsigned int i = 0; i < vtx[1].vout.size(); i++) {
-						if (vtx[1].vout[i].nValue == masternodePaymentAmount)
-							foundPaymentAmount = true;
-						if (vtx[1].vout[i].scriptPubKey == payee)
-							foundPayee = true;
-						if (vtx[1].vout[i].nValue == masternodePaymentAmount && vtx[1].vout[i].scriptPubKey == payee)
-							foundPaymentAndPayee = true;
+                        
+                        if (vtx[1].vout[i].nValue == masternodePaymentAmount) foundPaymentAmount = true;
+                        if (vtx[1].vout[i].scriptPubKey == payee) foundPayee = true;
+                        if (nTime < UPGDATE_WALLET_VERSION_DATE) { 
+                            if (vtx[1].vout[i].nValue == masternodePaymentAmount && vtx[1].vout[i].scriptPubKey == payee) foundPaymentAndPayee = true;
+                        }
+                        else {
+                            CTxDestination address1;
+                            ExtractDestination(vtx[1].vout[i].scriptPubKey, address1);
+                            CPayDaycoinAddress address2(address1);
+                            if (vtx[1].vout[i].nValue == masternodePaymentAmount && address2.ToString().c_str() == targetNode) foundPaymentAndPayee = true;                                
+                        }
+
 					}
 
 					CTxDestination address1;
 					ExtractDestination(payee, address1);
-                    CPayDaycoinAddress address2(address1);
+					CPayDaycoinAddress address2(address1);
 
 					if (!foundPaymentAndPayee) {
 						if (fDebug) { LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight + 1); }
@@ -2582,13 +2618,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 	else {
 		if (fDebug) { LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", pindexBest->nHeight + 1); }
 	}
-
-
-
-
-
-
-
 
 
 	// Check transactions
@@ -3567,7 +3596,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		CAddress addrFrom;
 		uint64_t nNonce = 1;
 		vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
-		if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
+		if (pfrom->nVersion < MIN_PEER_PROTO_VERSION && GetTime() > UPGDATE_WALLET_VERSION_DATE)
 		{
 			// disconnect from peers older than this proto version
 			LogPrintf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString(), pfrom->nVersion);
