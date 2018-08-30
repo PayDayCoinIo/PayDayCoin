@@ -18,6 +18,8 @@
 
 class CValidationState;
 
+#define UPGDATE_WALLET_VERSION_DATE 1536188400 // 09/05/2018 @ 11:00pm (UTC)
+
 #define START_MASTERNODE_PAYMENTS_TESTNET 1521072000  //Friday, February 9, 2018 10:00:00 AM GMT
 #define START_MASTERNODE_PAYMENTS 1521072000  //Friday, February 9, 2018 10:00:00 AM GMT
 #define STAKE_MIN_CONFIRMATIONS 370
@@ -69,6 +71,8 @@ static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20
 
 static const int64_t DRIFT = 600;
 inline int64_t FutureDrift(int64_t nTime) { return nTime + DRIFT; }
+
+inline int GetPoolPeerProtoVersion() { return (GetTime() < UPGDATE_WALLET_VERSION_DATE ? MIN_POOL_PEER_PROTO_VERSION_1 : MIN_POOL_PEER_PROTO_VERSION_2); }
 
 /** "reject" message codes **/
 static const unsigned char REJECT_INVALID = 0x10;

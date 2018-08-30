@@ -129,7 +129,7 @@ genleveldb.depends = FORCE
 PRE_TARGETDEPS += $$PWD/src/leveldb/libleveldb.a
 QMAKE_EXTRA_TARGETS += genleveldb
 # Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
-QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; $$PWD/src/leveldb/libmemenv.a; cd $$PWD/src/leveldb ; $(MAKE) clean
+QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; $$PWD/src/leveldb/libmemenv.a;
 
 
 #Build Secp256k1
@@ -143,7 +143,7 @@ gensecp256k1.depends = FORCE
 PRE_TARGETDEPS += $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.o
 QMAKE_EXTRA_TARGETS += gensecp256k1
 # Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
-QMAKE_CLEAN += $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.o; $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.lo; cd $$PWD/src/secp256k1; $(MAKE) clean
+QMAKE_CLEAN += $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.o; $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.lo;
 isEmpty(SECP256K1_LIB_PATH) {
 	windows:SECP256K1_LIB_PATH=$$PWD/src/secp256k1/.libs
 }
