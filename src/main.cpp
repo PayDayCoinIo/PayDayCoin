@@ -35,6 +35,8 @@ using namespace boost;
 // Global state
 //
 
+int64_t WalletStart = GetTime();
+
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
 
@@ -47,7 +49,7 @@ set<pair<COutPoint, unsigned int> > setStakeSeen;
 
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
 
-unsigned int nStakeMinAge = 24* 60 * 60; // 24 hours
+unsigned int nStakeMinAge = 24 * 60 * 60; // 24 hours
 unsigned int nStakeMaxAge = 48 * 24 * 60 * 60; // 48 Days.
 unsigned int nModifierInterval = 2 * 60; // time to elapse before new modifier is computed
 
@@ -1461,6 +1463,19 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 	return true;
 }
 
+bool IsWalletGracePeriod()
+{
+  if (IsInitialBlockDownload()) {
+		WalletStart = GetTime();
+		LogPrintf("Updated start time is : %d \n", WalletStart);
+	}
+	if (GetTime() < WalletStart + 3600) {
+  	return true;
+	}
+	
+	return false;		
+}
+
 bool IsInitialBlockDownload()
 {
 	LOCK(cs_main);
@@ -2594,7 +2609,14 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 					CTxDestination address1;
 					ExtractDestination(payee, address1);
 					CPayDaycoinAddress address2(address1);
-
+					
+					bool fIsWalletGracePeriod = IsWalletGracePeriod();
+					if (fIsWalletGracePeriod) {
+						foundPaymentAmount = true;
+						foundPayee = true;
+						foundPaymentAndPayee = true;
+					}
+					
 					if (!foundPaymentAndPayee) {
 						if (fDebug) { LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight + 1); }
 						return DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));

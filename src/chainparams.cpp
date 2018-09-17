@@ -116,6 +116,13 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
 
+		vSeeds.push_back(CDNSSeedData("a",  "108.61.190.194"));
+		vSeeds.push_back(CDNSSeedData("b",  "209.250.250.22"));
+		vSeeds.push_back(CDNSSeedData("c",  "45.77.230.162"));
+		vSeeds.push_back(CDNSSeedData("d",  "199.247.18.81"));
+		vSeeds.push_back(CDNSSeedData("e",  "199.247.16.22"));
+		vSeeds.push_back(CDNSSeedData("f",  "199.247.22.240"));
+
         vSeeds.push_back(CDNSSeedData("a.paydaycoin.io",  "a.paydaycoin.io"));
         vSeeds.push_back(CDNSSeedData("b.paydaycoin.io",  "b.paydaycoin.io"));
         vSeeds.push_back(CDNSSeedData("c.paydaycoin.io",  "c.paydaycoin.io"));
