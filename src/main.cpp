@@ -2555,38 +2555,29 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 					string targetNode;
 					CScript payee;
 					CTxIn vin;
-                    if (nTime < UPGDATE_WALLET_VERSION_DATE) {
-                        if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, payee, vin) || payee == CScript()) {
+
+                    if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, payee, vin)) {
+                        CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
+                        if (winningNode) {
+                            payee = GetScriptForDestination(winningNode->pubkey.GetID());
+                            //payeerewardaddress = winningNode->donationAddress;
+                            CTxDestination address1;
+                            ExtractDestination(payee, address1);
+                            CPayDaycoinAddress address2(address1);
+
+                            //CTxDestination address3;
+                            //ExtractDestination(payeerewardaddress, address3);
+                            //CPayDaycoinAddress address4(address3);
+                            targetNode = address2.ToString().c_str();
+                            //LogPrintf("Masternode winner address: %s\n", targetNode);
+
+                        }
+                        else
+                        {
                             foundPayee = true; //doesn't require a specific payee
                             foundPaymentAmount = true;
                             foundPaymentAndPayee = true;
-                            if (fDebug) { LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1); }
-                        }
-                    } else {
-                    
-                        if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, payee, vin)) {
-                            CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
-                            if (winningNode) {
-                                payee = GetScriptForDestination(winningNode->pubkey.GetID());
-                                //payeerewardaddress = winningNode->donationAddress;
-                                CTxDestination address1;
-                                ExtractDestination(payee, address1);
-                                CPayDaycoinAddress address2(address1);
-
-                                //CTxDestination address3;
-                                //ExtractDestination(payeerewardaddress, address3);
-                                //CPayDaycoinAddress address4(address3);
-                                targetNode = address2.ToString().c_str();
-                                //LogPrintf("Masternode winner address: %s\n", targetNode);
-
-                            }
-                            else
-                            {
-                                foundPayee = true; //doesn't require a specific payee
-                                foundPaymentAmount = true;
-                                foundPaymentAndPayee = true;
-                                if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
-                            }
+                            if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
                         }
                     }
 
@@ -2594,15 +2585,10 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                         
                         if (vtx[1].vout[i].nValue == masternodePaymentAmount) foundPaymentAmount = true;
                         if (vtx[1].vout[i].scriptPubKey == payee) foundPayee = true;
-                        if (nTime < UPGDATE_WALLET_VERSION_DATE) { 
-                            if (vtx[1].vout[i].nValue == masternodePaymentAmount && vtx[1].vout[i].scriptPubKey == payee) foundPaymentAndPayee = true;
-                        }
-                        else {
-                            CTxDestination address1;
-                            ExtractDestination(vtx[1].vout[i].scriptPubKey, address1);
-                            CPayDaycoinAddress address2(address1);
-                            if (vtx[1].vout[i].nValue == masternodePaymentAmount && address2.ToString().c_str() == targetNode) foundPaymentAndPayee = true;                                
-                        }
+                        CTxDestination address1;
+                        ExtractDestination(vtx[1].vout[i].scriptPubKey, address1);
+                        CPayDaycoinAddress address2(address1);
+                        if (vtx[1].vout[i].nValue == masternodePaymentAmount && address2.ToString().c_str() == targetNode) foundPaymentAndPayee = true;
 
 					}
 
@@ -3618,13 +3604,47 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		CAddress addrFrom;
 		uint64_t nNonce = 1;
 		vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
-		if (pfrom->nVersion < MIN_PEER_PROTO_VERSION && GetTime() > UPGDATE_WALLET_VERSION_DATE)
-		{
-			// disconnect from peers older than this proto version
-			LogPrintf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString(), pfrom->nVersion);
-			pfrom->fDisconnect = true;
-			return false;
-		}
+        if (pfrom->nVersion < MIN_PEER_PROTO_VERSION && GetTime() > UPGDATE_WALLET_VERSION_DATE)
+        {
+
+            CNetAddr nodeAddr = (CNetAddr)pfrom->addr;
+            bool rootNode = false;
+            bool wlNode = false;
+            if (!fBanRootNodes){
+                const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+                BOOST_FOREACH(const CDNSSeedData &seed, vSeeds) {
+                        vector<CNetAddr> vIPs;
+                        if (LookupHost(seed.host.c_str(), vIPs))
+                        {
+                            BOOST_FOREACH(CNetAddr& ip, vIPs)
+                            {
+                                if ( ip == nodeAddr) rootNode = true;
+                            }
+                        }
+                    }
+                }
+
+            BOOST_FOREACH(const std::string &wlAddr,vWhiteListNodes){
+                if (wlAddr == nodeAddr.ToStringIP()) wlNode = true;
+            }
+            if (!rootNode && !wlNode) {
+                int count = 0;
+                std::map<CNetAddr, int>::iterator bn;
+                bn = mapBanNodes.find(nodeAddr);
+                if (bn != mapBanNodes.end()) {
+                    mapBanNodes[nodeAddr]++;
+                } else {
+                    mapBanNodes.insert(make_pair(nodeAddr,count));
+                }
+                count = mapBanNodes[nodeAddr];
+                int bantime = (count == 0 ? 1 : 2 << count);
+                CNode::Ban(pfrom->addr,BanReasonNodeMisbehaving,(bantime*60));
+                LogPrintf("Ban connected node %s with old version %s on bantime = %s\n", pfrom->addr.ToString(), pfrom->nVersion,(bantime*60));
+
+                pfrom->fDisconnect = true;
+                return false;
+            }
+        }
 
 		if (pfrom->nVersion == 10300)
 			pfrom->nVersion = 300;
@@ -4506,6 +4526,21 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 			if (!vAddr.empty())
 				pto->PushMessage("addr", vAddr);
 		}
+
+        if (!fBanRootNodes){
+            CNetAddr nodeAddr = (CNetAddr)pto->addr;
+            const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+            BOOST_FOREACH(const CDNSSeedData &seed, vSeeds) {
+                    vector<CNetAddr> vIPs;
+                    if (LookupHost(seed.host.c_str(), vIPs))
+                    {
+                        BOOST_FOREACH(CNetAddr& ip, vIPs)
+                        {
+                            if ( ip == nodeAddr) State(pto->GetId())->fShouldBan = false;
+                        }
+                    }
+                }
+            }
 
 		if (State(pto->GetId())->fShouldBan) {
 			if (pto->addr.IsLocal())

@@ -71,6 +71,7 @@ bool BindListenPort(const CService &bindAddr, std::string& strError=REF(std::str
 void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
 void SocketSendData(CNode *pnode);
+void CheckPeer(CNode *pnode);
 
 typedef int NodeId;
 
@@ -134,6 +135,9 @@ extern uint64_t nLocalHostNonce;
 extern CAddrMan addrman;
 extern int nMaxConnections;
 
+extern bool fBanRootNodes;
+extern std::vector<std::string> vWhiteListNodes;
+
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
 extern std::map<CInv, CDataStream> mapRelay;
@@ -157,6 +161,8 @@ struct LocalServiceInfo {
 extern CCriticalSection cs_mapLocalHost;
 extern map<CNetAddr, LocalServiceInfo> mapLocalHost;
 
+extern map<CNetAddr, int> mapBanNodes;
+
 /** Subversion as sent to the P2P network in `version` messages */
 extern std::string strSubVersion;
 
@@ -169,6 +175,7 @@ public:
     int64_t nLastRecv;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
+    int64_t nTimeLastUpdate;
     std::string addrName;
     int nVersion;
     std::string cleanSubVer;
@@ -332,6 +339,7 @@ public:
     int64_t nLastSendEmpty;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
+    int64_t nTimeLastUpdate;
     CAddress addr;
     std::string addrName;
     CService addrLocal;
@@ -410,6 +418,7 @@ public:
         nRecvBytes = 0;
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
+        nTimeLastUpdate = GetTime();
         nTimeOffset = 0;
         addr = addrIn;
         addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;

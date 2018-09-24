@@ -58,7 +58,10 @@ CAddrMan addrman;
 std::string strSubVersion;
 int nMaxConnections = 125;
 
+bool fBanRootNodes = false;
 vector<CNode*> vNodes;
+vector<std::string> vWhiteListNodes;
+
 CCriticalSection cs_vNodes;
 map<CInv, CDataStream> mapRelay;
 deque<pair<int64_t, CInv> > vRelayExpiration;
@@ -73,7 +76,7 @@ CCriticalSection cs_setservAddNodeAddresses;
 
 vector<std::string> vAddedNodes;
 CCriticalSection cs_vAddedNodes;
-
+map<CNetAddr, int> mapBanNodes;
 NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
@@ -92,6 +95,43 @@ void AddOneShot(string strDest)
 unsigned short GetListenPort()
 {
     return (unsigned short)(GetArg("-port", Params().GetDefaultPort()));
+}
+
+
+// check peer
+void CheckPeer(CNode *pnode)
+{
+    if (pnode->fSuccessfullyConnected)
+    {
+
+        CNodeStats stats;
+        pnode->copyStats(stats);
+        int nVersion = stats.nVersion;
+        CNetAddr nodeAddr = (CNetAddr)pnode->addr;
+        if (!fBanRootNodes){
+            const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+            BOOST_FOREACH(const CDNSSeedData &seed, vSeeds) {
+                    vector<CNetAddr> vIPs;
+                    if (LookupHost(seed.host.c_str(), vIPs))
+                    {
+                        BOOST_FOREACH(CNetAddr& ip, vIPs)
+                        {
+                            if ( ip == nodeAddr) return;
+                        }
+                    }
+                }
+        }
+        BOOST_FOREACH(const std::string &wlAddr,vWhiteListNodes){
+            if (wlAddr == nodeAddr.ToStringIP()) return;
+        }
+        pnode->nTimeLastUpdate = GetTime();
+        if ( nVersion < PROTOCOL_VERSION && GetTime() > UPGDATE_WALLET_VERSION_DATE) {
+            LogPrintf("NodeManager: disconnect outdated node with version %s and address %s \n",nVersion, nodeAddr.ToString());
+            pnode->fDisconnect = true;
+        }
+
+    }
+
 }
 
 // find 'best' local address for a particular peer
@@ -310,39 +350,10 @@ bool IsReachable(const CNetAddr& addr)
     return vfReachable[net] && !vfLimited[net];
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void AddressCurrentlyConnected(const CService& addr)
 {
     addrman.Connected(addr);
 }
-
-
-
 
 uint64_t CNode::nTotalBytesRecv = 0;
 uint64_t CNode::nTotalBytesSent = 0;
@@ -437,6 +448,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool darkSendMaste
         }
 
         pnode->nTimeConnected = GetTime();
+        pnode->nTimeLastUpdate = pnode->nTimeConnected;
         return pnode;
     }
     else
@@ -1087,6 +1099,8 @@ void ThreadSocketHandler()
                     pnode->fDisconnect = true;
                 }
             }
+
+            CheckPeer(pnode);
         }
         {
             LOCK(cs_vNodes);

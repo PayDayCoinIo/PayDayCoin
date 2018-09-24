@@ -1467,3 +1467,12 @@ std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
     ss << boost::posix_time::from_time_t(nTime);
     return ss.str();
 }
+
+std::vector<std::string> StrToVect(const std::string str)
+{
+    std::stringstream ss(str);
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    std::vector<std::string> nodes(begin, end);
+    return nodes;
+}
