@@ -2808,7 +2808,7 @@ void Misbehaving(NodeId pnode, int howmuch)
 	if (state == NULL)
 		return;
 
-    CNetAddr nodeAddr; // = (CNetAddr)state->name;
+    CNetAddr nodeAddr;
 
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* cnode, vNodes)
@@ -2822,7 +2822,6 @@ void Misbehaving(NodeId pnode, int howmuch)
                 {
                     BOOST_FOREACH(CNetAddr& ip, vIPs)
                     {
-                        LogPrintf("Nodeaddr = %s; ip = %s \n",nodeAddr.ToStringIP(), ip.ToStringIP());
                         if ( ip == nodeAddr) return;
                     }
                 }
