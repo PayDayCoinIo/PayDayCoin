@@ -2808,6 +2808,22 @@ void Misbehaving(NodeId pnode, int howmuch)
 	if (state == NULL)
 		return;
 
+    CNetAddr nodeAddr = (CNetAddr)state->name;
+
+    if (!fBanRootNodes){
+        const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+        BOOST_FOREACH(const CDNSSeedData &seed, vSeeds) {
+                vector<CNetAddr> vIPs;
+                if (LookupHost(seed.host.c_str(), vIPs))
+                {
+                    BOOST_FOREACH(CNetAddr& ip, vIPs)
+                    {
+                        if ( ip == nodeAddr) return;
+                    }
+                }
+            }
+        }
+
 	state->nMisbehavior += howmuch;
 	if (state->nMisbehavior >= GetArg("-banscore", 100))
 	{
