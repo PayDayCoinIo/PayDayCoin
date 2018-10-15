@@ -2808,7 +2808,11 @@ void Misbehaving(NodeId pnode, int howmuch)
 	if (state == NULL)
 		return;
 
-    CNetAddr nodeAddr = (CNetAddr)state->name;
+    CNetAddr nodeAddr; // = (CNetAddr)state->name;
+
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* cnode, vNodes)
+        if (cnode->id == pnode) nodeAddr = (CNetAddr)cnode->addr;
 
     if (!fBanRootNodes){
         const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
