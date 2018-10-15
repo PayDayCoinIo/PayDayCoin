@@ -2818,6 +2818,7 @@ void Misbehaving(NodeId pnode, int howmuch)
                 {
                     BOOST_FOREACH(CNetAddr& ip, vIPs)
                     {
+                        LogPrintf("Nodeaddr = %s; ip = %s \n",nodeAddr.ToStringIP(), ip.ToStringIP());
                         if ( ip == nodeAddr) return;
                     }
                 }
