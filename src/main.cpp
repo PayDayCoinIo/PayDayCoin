@@ -4560,21 +4560,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 				pto->PushMessage("addr", vAddr);
 		}
 
-        if (!fBanRootNodes){
-            CNetAddr nodeAddr = (CNetAddr)pto->addr;
-            const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
-            BOOST_FOREACH(const CDNSSeedData &seed, vSeeds) {
-                    vector<CNetAddr> vIPs;
-                    if (LookupHost(seed.host.c_str(), vIPs))
-                    {
-                        BOOST_FOREACH(CNetAddr& ip, vIPs)
-                        {
-                            if ( ip == nodeAddr) State(pto->GetId())->fShouldBan = false;
-                        }
-                    }
-                }
-            }
-
 		if (State(pto->GetId())->fShouldBan) {
 			if (pto->addr.IsLocal())
 				LogPrintf("Warning: not banning local node %s!\n", pto->addr.ToString().c_str());
