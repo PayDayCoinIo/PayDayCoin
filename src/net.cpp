@@ -97,13 +97,11 @@ unsigned short GetListenPort()
     return (unsigned short)(GetArg("-port", Params().GetDefaultPort()));
 }
 
-
 // check peer
 void CheckPeer(CNode *pnode)
 {
     if (pnode->fSuccessfullyConnected)
     {
-        LogPrintf("CheckNode: thread \n");
         CNodeStats stats;
         pnode->copyStats(stats);
         int nVersion = stats.nVersion;
@@ -116,9 +114,7 @@ void CheckPeer(CNode *pnode)
             LogPrintf("NodeManager: disconnect outdated node with version %s and address %s \n",nVersion, nodeAddr.ToString());
             pnode->fDisconnect = true;
         }
-
     }
-
 }
 
 // find 'best' local address for a particular peer
