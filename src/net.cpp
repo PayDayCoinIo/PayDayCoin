@@ -103,7 +103,7 @@ void CheckPeer(CNode *pnode)
 {
     if (pnode->fSuccessfullyConnected)
     {
-
+        LogPrintf("CheckNode: thread \n");
         CNodeStats stats;
         pnode->copyStats(stats);
         int nVersion = stats.nVersion;
