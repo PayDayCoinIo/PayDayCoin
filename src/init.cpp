@@ -774,6 +774,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             if (!IsLimited(NET_IPV4))
                 fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound);
         }
+        nMaxConnections = GetArg("-maxconnections", nMaxConnections);
         if (!fBound)
             return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
     }
