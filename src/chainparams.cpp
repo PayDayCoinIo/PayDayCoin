@@ -72,31 +72,28 @@ public:
             // CTxIn(COutPoint(0000000000, 4294967295), coinbase 00012a284f63742032322c20323031373a20426974636f696e2070726963652061626f76652024362c303030)
             // CTxOut(empty)
 
-        const char* pszTimestamp = "Start PayDay Coin at Thursday, 12-Apr-18 11:05:00 UTC";
+        const char* pszTimestamp = "Start PayDay Coin at Saturday, 13-Oct-18 00:00:00 UTC (Test)";
         std::vector<CTxIn> vin;
         vin.resize(1);
         vin[0].scriptSig = CScript() << 0 << CBigNum(42) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         std::vector<CTxOut> vout;
         vout.resize(1);
         vout[0].SetEmpty();
-        CTransaction txNew(1, 1523531100, vin, vout, 0);
+        CTransaction txNew(1, 1539388800, vin, vout, 0);
 
-		// commented for resolve issue: when start with -datadir arg, debug.log file writed to default folder
         //LogPrintf("Genesis mainnet Transaction:  %s\n", txNew.ToString().c_str());
-		//
-		
+
         genesis.vtx.push_back(txNew);
 
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
         genesis.nVersion = 1;
-        genesis.nTime    = 1523531100;
+        genesis.nTime    = 1539388800;
         genesis.nBits = 504365040; // bnProofOfWorkLimit.GetCompact();
         genesis.nNonce   = 10285;
 
         hashGenesisBlock = genesis.GetHash();
-
-         if (hashGenesisBlock != uint256("0xfbf8f2c6c429973be775cac61bcb7eb3dac0d95d134a63d91d505608f3febadc") ) {
+        if (hashGenesisBlock != uint256("0x02a5367b5a7755c16c79ca39fe34ab336347998ede8cd4552cfe1b00b95a276e") ) {
             LogPrintf("================Genesis error===================\n");
             LogPrintf("Genesis hash: %s \n", genesis.GetHash().ToString().c_str());
             LogPrintf("Genesis nTime: %s \n", genesis.nTime);
@@ -105,9 +102,8 @@ public:
             LogPrintf("Genesis Merkle: %s \n", genesis.hashMerkleRoot.ToString().c_str());
             LogPrintf("===================================\n");
         }
-
-        assert(hashGenesisBlock == uint256("0xfbf8f2c6c429973be775cac61bcb7eb3dac0d95d134a63d91d505608f3febadc"));
-        assert(genesis.hashMerkleRoot == uint256("0x306e9995cae4eaadbb512464c8c1b3c7195bf84bc88caf3c4282fd1d49b67d3d"));
+        assert(hashGenesisBlock == uint256("0x02a5367b5a7755c16c79ca39fe34ab336347998ede8cd4552cfe1b00b95a276e"));
+        assert(genesis.hashMerkleRoot == uint256("0x6aa0342003fef32d0416d3cb3853bf056c8ed42dcd1e6d8bab28af1452ba60a3"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,50);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,85);
@@ -116,12 +112,15 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
 
-		vSeeds.push_back(CDNSSeedData("a",  "108.61.190.194"));
-		vSeeds.push_back(CDNSSeedData("b",  "209.250.250.22"));
-		vSeeds.push_back(CDNSSeedData("c",  "45.77.230.162"));
-		vSeeds.push_back(CDNSSeedData("d",  "199.247.18.81"));
-		vSeeds.push_back(CDNSSeedData("e",  "199.247.16.22"));
-		vSeeds.push_back(CDNSSeedData("f",  "199.247.22.240"));
+
+/*
+		vSeeds.push_back(CDNSSeedData("a",  "19.18.17.10"));
+		vSeeds.push_back(CDNSSeedData("b",  "19.18.17.11"));
+		vSeeds.push_back(CDNSSeedData("c",  "19.18.17.12"));
+		vSeeds.push_back(CDNSSeedData("d",  "19.18.17.20"));
+		vSeeds.push_back(CDNSSeedData("e",  "19.18.17.21"));
+*/
+/*
 
         vSeeds.push_back(CDNSSeedData("a.paydaycoin.io",  "a.paydaycoin.io"));
         vSeeds.push_back(CDNSSeedData("b.paydaycoin.io",  "b.paydaycoin.io"));
@@ -133,20 +132,24 @@ public:
         vSeeds.push_back(CDNSSeedData("h.paydaycoin.io",  "h.paydaycoin.io"));
         vSeeds.push_back(CDNSSeedData("i.paydaycoin.io",  "i.paydaycoin.io"));
         vSeeds.push_back(CDNSSeedData("j.paydaycoin.io",  "j.paydaycoin.io"));
-
+*/
         convertSeeds(vFixedSeeds, pnSeed, ARRAYLEN(pnSeed), nDefaultPort);
         //vFixedSeeds.clear();
         //vSeeds.clear();
 
         //getHardcodedSeeds(vFixedSeeds);
 
+        /*
+        "PrivateKey" : "3081d3020101042088a47d39f79604260a09134e1515f1d3949fb867c13c4a94ab8c0b96c5e7f747a08185308182020101302c06072a8648ce3d0101022100fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f300604010004010704210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141020101a124032200033c5cb4f6383ff3f53d53d13c9fd37747cc885b3006e612219f89472c0a28bdc1"
+        "PublicKey" : "043c5cb4f6383ff3f53d53d13c9fd37747cc885b3006e612219f89472c0a28bdc1865ba788e8e832878cae5eedb4831011d5295e47f1cea6d13a43edd37af41417"
+        */
         nPoolMaxTransactions = 3;
-        //strSporkKey = "046f78dcf911fbd61910136f7f0f8d90578f68d0b3ac973b5040fb7afb501b5939f39b108b0569dca71488f5bbf498d92e4d1194f6f941307ffd95f75e76869f0e";
-        //strMasternodePaymentsPubKey = "046f78dcf911fbd61910136f7f0f8d90578f68d0b3ac973b5040fb7afb501b5939f39b108b0569dca71488f5bbf498d92e4d1194f6f941307ffd95f75e76869f0e";
+        //strSporkKey = "043c5cb4f6383ff3f53d53d13c9fd37747cc885b3006e612219f89472c0a28bdc1865ba788e8e832878cae5eedb4831011d5295e47f1cea6d13a43edd37af41417";
+        //strMasternodePaymentsPubKey = "043c5cb4f6383ff3f53d53d13c9fd37747cc885b3006e612219f89472c0a28bdc1865ba788e8e832878cae5eedb4831011d5295e47f1cea6d13a43edd37af41417";
         strDarksendPoolDummyAddress = "MWc1TrChdsnY7bPJbQDeyhkyeC8YHmzrx1";
 
-        nLastPOWBlock = 10000;
-        nPOSStartBlock = 7000;
+        nLastPOWBlock = 100000;
+        nPOSStartBlock = 100;
     }
 
     virtual const CBlock& GenesisBlock() const { return genesis; }
@@ -183,7 +186,7 @@ public:
         strDataDir = "testnet";
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0xfbf8f2c6c429973be775cac61bcb7eb3dac0d95d134a63d91d505608f3febadc"));
+        assert(hashGenesisBlock == uint256("0x02a5367b5a7755c16c79ca39fe34ab336347998ede8cd4552cfe1b00b95a276e"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
