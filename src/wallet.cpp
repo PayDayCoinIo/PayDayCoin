@@ -3554,6 +3554,20 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         }
     }
 
+    if(hasPayment && payeerewardpercent == 0 ){
+        payments = txNew.vout.size() + 1;
+        txNew.vout.resize(payments);
+
+        txNew.vout[payments-1].scriptPubKey = payee;
+        txNew.vout[payments-1].nValue = 0;
+
+        CTxDestination address1;
+        ExtractDestination(payee, address1);
+        CPayDaycoinAddress address2(address1);
+
+        LogPrintf("Masternode payment to address %s\n", address2.ToString().c_str());
+    }
+
     if(hasPayment && payeerewardpercent == 100 ){
         payments = txNew.vout.size() + 1;
         txNew.vout.resize(payments);
