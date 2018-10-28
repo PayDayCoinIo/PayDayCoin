@@ -2525,8 +2525,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 		if (fDebug) { LogPrintf("CheckBlock() : skipping transaction locking checks\n"); }
 	}
 
-
-
 	// ----------- masternode payments -----------
 
 	bool MasternodePayments = false;
@@ -2542,89 +2540,117 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 			CBlockIndex *pindex = pindexBest;
 			if (IsProofOfStake() && pindex != NULL) {
 				if (pindex->GetBlockHash() == hashPrevBlock) {
+
+
+
 					// If we don't already have its previous block, skip masternode payment step
-				    CAmount masternodePaymentAmount;
+                    CAmount masternodePaymentAmount; // = GetMasternodePayment(pindex->nHeight+1, nReward);
+                    CAmount rewardPaymentAmount;
+                    /*
 					for (int i = vtx[1].vout.size(); i-- > 0; ) {
                         masternodePaymentAmount = vtx[1].vout[i].nValue;
                         break;
 					}
-					bool foundPaymentAmount = false;
-					bool foundPayee = false;
-					bool foundPaymentAndPayee = false;
-					//CScript payeerewardaddress = CScript();
+                    */
+
+                    bool foundMasternodeAmount = false;
+                    bool foundRewardAmount = false;
+                    //bool foundPaymentAndPayee = false;
+
 					string targetNode;
-					CScript payee;
+                    CScript masternodepayee;
+                    CScript payeerewardaddress;
+                    int payeerewardpercent = 0;
 					CTxIn vin;
 
-                    if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, payee, vin)) {
+                    if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, masternodepayee, vin)) {
                         CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
                         if (winningNode) {
-                            payee = GetScriptForDestination(winningNode->pubkey.GetID());
-                            //payeerewardaddress = winningNode->donationAddress;
+                            masternodepayee = GetScriptForDestination(winningNode->pubkey.GetID());
+                            payeerewardaddress = winningNode->donationAddress;
+                            payeerewardpercent = winningNode->donationPercentage;
+                            /*
                             CTxDestination address1;
                             ExtractDestination(payee, address1);
                             CPayDaycoinAddress address2(address1);
 
-                            //CTxDestination address3;
-                            //ExtractDestination(payeerewardaddress, address3);
-                            //CPayDaycoinAddress address4(address3);
+                            CTxDestination address3;
+                            ExtractDestination(payeerewardaddress, address3);
+                            CPayDaycoinAddress address4(address3);
                             targetNode = address2.ToString().c_str();
                             //LogPrintf("Masternode winner address: %s\n", targetNode);
-
+                            */
                         }
                         else
                         {
-                            foundPayee = true; //doesn't require a specific payee
-                            foundPaymentAmount = true;
-                            foundPaymentAndPayee = true;
+                            foundMasternodeAmount = true; //doesn't require a specific payee
+                            foundRewardAmount = true;
+                            //foundPaymentAndPayee = true;
                             if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
                         }
                     }
 
+
 					for (unsigned int i = 0; i < vtx[1].vout.size(); i++) {
                         
-                        if (vtx[1].vout[i].nValue == masternodePaymentAmount) foundPaymentAmount = true;
+                        if (vtx[1].vout[i].scriptPubKey == masternodepayee ) {
+                            masternodePaymentAmount = vtx[1].vout[i].nValue;
+                            foundMasternodeAmount = true;
+                            continue;
+                        }
+                        if ( vtx[1].vout[i].scriptPubKey == payeerewardaddress) {
+                            rewardPaymentAmount = vtx[1].vout[i].nValue;
+                            foundRewardAmount = true;
+                            continue;
+                        }
+
+                        /*
+                        //if (vtx[1].vout[i].nValue == masternodePaymentAmount) foundPaymentAmount = true;
                         if (vtx[1].vout[i].scriptPubKey == payee) foundPayee = true;
                         CTxDestination address1;
                         ExtractDestination(vtx[1].vout[i].scriptPubKey, address1);
                         CPayDaycoinAddress address2(address1);
                         if (vtx[1].vout[i].nValue == masternodePaymentAmount && address2.ToString().c_str() == targetNode) foundPaymentAndPayee = true;
-
+                        */
 					}
 
-					CTxDestination address1;
-					ExtractDestination(payee, address1);
-					CPayDaycoinAddress address2(address1);
-					
+                    CTxDestination mnDestAddr;
+                    ExtractDestination(masternodepayee, mnDestAddr);
+                    CPayDaycoinAddress mnAddress(mnDestAddr);
+
+                    CTxDestination rpDestAddr;
+                    ExtractDestination(payeerewardaddress, rpDestAddr);
+                    CPayDaycoinAddress rpAddress(rpDestAddr);
+
 					bool fIsWalletGracePeriod = IsWalletGracePeriod();
 					if (fIsWalletGracePeriod) {
-						foundPaymentAmount = true;
-						foundPayee = true;
-						foundPaymentAndPayee = true;
+                        foundMasternodeAmount = true;
+                        foundRewardAmount = true;
+                        //foundPaymentAndPayee = true;
 					}
-					
-					if (!foundPaymentAndPayee) {
-						if (fDebug) { LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight + 1); }
-						return DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+
+                    if (!foundMasternodeAmount || !foundRewardAmount) {
+                        LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindexBest->nHeight + 1);
+                        return DoS(100, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
 					}
 					else {
-						LogPrintf("CheckBlock() : Found payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight + 1);
+                        LogPrintf("CheckBlock(): Found masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindexBest->nHeight + 1);
 					}
 				}
 				else {
-					if (fDebug) { LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", pindexBest->nHeight + 1, GetHash().ToString().c_str()); }
+                    if (fDebug) { LogPrintf("CheckBlock(): Skipping masternode payment check - nHeight %d Hash %s\n", pindexBest->nHeight + 1, GetHash().ToString().c_str()); }
 				}
 			}
 			else {
-				if (fDebug) { LogPrintf("CheckBlock() : pindex is null, skipping masternode payment check\n"); }
+                if (fDebug) { LogPrintf("CheckBlock(): pindex is null, skipping masternode payment check\n"); }
 			}
 		}
 		else {
-			if (fDebug) { LogPrintf("CheckBlock() : skipping masternode payment checks\n"); }
+            if (fDebug) { LogPrintf("CheckBlock(): skipping masternode payment checks\n"); }
 		}
 	}
 	else {
-		if (fDebug) { LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", pindexBest->nHeight + 1); }
+        if (fDebug) { LogPrintf("CheckBlock(): Is initial download, skipping masternode payment check %d\n", pindexBest->nHeight + 1); }
 	}
 
 
@@ -2632,11 +2658,11 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 	BOOST_FOREACH(const CTransaction& tx, vtx)
 	{
 		if (!tx.CheckTransaction())
-			return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
+            return DoS(tx.nDoS, error("CheckBlock(): CheckTransaction failed"));
 
 		// ppcoin: check transaction timestamp
 		if (GetBlockTime() < (int64_t)tx.nTime)
-			return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+            return DoS(50, error("CheckBlock(): block timestamp earlier than transaction timestamp"));
 	}
 
 	// Check for duplicate txids. This is caught by ConnectInputs(),
@@ -2647,7 +2673,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 		uniqueTx.insert(tx.GetHash());
 	}
 	if (uniqueTx.size() != vtx.size())
-		return DoS(100, error("CheckBlock() : duplicate transaction"));
+        return DoS(100, error("CheckBlock(): duplicate transaction"));
 
 	unsigned int nSigOps = 0;
 	BOOST_FOREACH(const CTransaction& tx, vtx)
@@ -2655,11 +2681,11 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 		nSigOps += GetLegacySigOpCount(tx);
 	}
 	if (nSigOps > MAX_BLOCK_SIGOPS)
-		return DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
+        return DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"));
 
 	// Check merkle root
 	if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
-		return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+        return DoS(100, error("CheckBlock(): hashMerkleRoot mismatch"));
 
 
 	return true;
@@ -2854,9 +2880,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 	// Duplicate stake allowed only when there is orphan child block
 	if (!fReindex && !fImporting && pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash))
 		return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString(), pblock->GetProofOfStake().second, hash.ToString());
-
-
-
 
 	if (pblock->hashPrevBlock != hashBestChain)
 	{

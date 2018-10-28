@@ -268,6 +268,15 @@ void MasternodeManager::on_createButton_clicked()
     aenode->exec();
 }
 
+void MasternodeManager::on_editButton_clicked()
+{
+    QMessageBox msg;
+    msg.setText("Edit button clicked");
+
+    msg.exec();
+
+}
+
 void MasternodeManager::on_startButton_clicked()
 {
     // start the node
