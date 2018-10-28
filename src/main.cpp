@@ -2630,11 +2630,11 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 					}
 
                     if (!foundMasternodeAmount || !foundRewardAmount) {
-                        LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress, masternodePaymentAmount, rpAddress, rewardPaymentAmount, pindexBest->nHeight + 1);
+                        LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindexBest->nHeight + 1);
                         return DoS(100, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
 					}
 					else {
-                        LogPrintf("CheckBlock(): Found masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress, masternodePaymentAmount, rpAddress, rewardPaymentAmount, pindexBest->nHeight + 1);
+                        LogPrintf("CheckBlock(): Found masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindexBest->nHeight + 1);
 					}
 				}
 				else {
@@ -2880,9 +2880,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 	// Duplicate stake allowed only when there is orphan child block
 	if (!fReindex && !fImporting && pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash))
 		return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString(), pblock->GetProofOfStake().second, hash.ToString());
-
-
-
 
 	if (pblock->hashPrevBlock != hashBestChain)
 	{
