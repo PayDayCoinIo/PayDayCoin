@@ -2541,21 +2541,12 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 			if (IsProofOfStake() && pindex != NULL) {
 				if (pindex->GetBlockHash() == hashPrevBlock) {
 
-
-
 					// If we don't already have its previous block, skip masternode payment step
                     CAmount masternodePaymentAmount; // = GetMasternodePayment(pindex->nHeight+1, nReward);
                     CAmount rewardPaymentAmount;
-                    /*
-					for (int i = vtx[1].vout.size(); i-- > 0; ) {
-                        masternodePaymentAmount = vtx[1].vout[i].nValue;
-                        break;
-					}
-                    */
 
                     bool foundMasternodeAmount = false;
                     bool foundRewardAmount = false;
-                    //bool foundPaymentAndPayee = false;
 
 					string targetNode;
                     CScript masternodepayee;
@@ -2569,27 +2560,15 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                             masternodepayee = GetScriptForDestination(winningNode->pubkey.GetID());
                             payeerewardaddress = winningNode->donationAddress;
                             payeerewardpercent = winningNode->donationPercentage;
-                            /*
-                            CTxDestination address1;
-                            ExtractDestination(payee, address1);
-                            CPayDaycoinAddress address2(address1);
-
-                            CTxDestination address3;
-                            ExtractDestination(payeerewardaddress, address3);
-                            CPayDaycoinAddress address4(address3);
-                            targetNode = address2.ToString().c_str();
-                            //LogPrintf("Masternode winner address: %s\n", targetNode);
-                            */
                         }
                         else
                         {
                             foundMasternodeAmount = true; //doesn't require a specific payee
                             foundRewardAmount = true;
-                            //foundPaymentAndPayee = true;
+
                             if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
                         }
                     }
-
 
 					for (unsigned int i = 0; i < vtx[1].vout.size(); i++) {
                         
@@ -2604,14 +2583,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                             continue;
                         }
 
-                        /*
-                        //if (vtx[1].vout[i].nValue == masternodePaymentAmount) foundPaymentAmount = true;
-                        if (vtx[1].vout[i].scriptPubKey == payee) foundPayee = true;
-                        CTxDestination address1;
-                        ExtractDestination(vtx[1].vout[i].scriptPubKey, address1);
-                        CPayDaycoinAddress address2(address1);
-                        if (vtx[1].vout[i].nValue == masternodePaymentAmount && address2.ToString().c_str() == targetNode) foundPaymentAndPayee = true;
-                        */
 					}
 
                     CTxDestination mnDestAddr;
@@ -2626,7 +2597,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 					if (fIsWalletGracePeriod) {
                         foundMasternodeAmount = true;
                         foundRewardAmount = true;
-                        //foundPaymentAndPayee = true;
 					}
 
                     if (!foundMasternodeAmount || !foundRewardAmount) {
