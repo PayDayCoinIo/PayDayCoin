@@ -3542,7 +3542,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 		
     if(bMasterNodePayment) {
         //spork
-        if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee, vin)){
+        if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, masternodepayee, vin)){
             CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
             if(winningNode && !fIsInitialDownload){
                 masternodepayee = GetScriptForDestination(winningNode->pubkey.GetID());
