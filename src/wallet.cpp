@@ -3555,18 +3555,29 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         }
     }
 
+    int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, nReward);
+
     CBlock block;
     bool BlkExist = block.ReadFromDisk(pindexPrev, true);
+    unsigned int ExtendReward = 0;
 
     if (BlkExist && block.vtx.size() > 2)
     {
+        CTransaction tmpTx;
+        tmpTx.vin.clear();
+        tmpTx.vout.clear();
 
         CTxDB txdb("r");
         double allValueOut = 0;
+        double prevValueOut = 0;
+        unsigned int addrcount = 0;
+        int64_t nRewardV = (nReward - masternodePayment) * 0.4;
+        nCredit -= nRewardV;
+        double dRewardV = (nReward - masternodePayment) * 0.4;
+        double vReward = 0;
 
         BOOST_FOREACH (const CTransaction& btx, block.vtx)
         {
-
 
             if (btx.IsCoinStake() || btx.IsCoinBase() || btx.IsNull()) continue;
 
@@ -3576,12 +3587,43 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                 CTxIndex txindex;
                 if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex)) continue;
                 allValueOut += txPrev.vout[txin.prevout.n].nValue;
-                LogPrintf("allValueOut: + %s\n", txPrev.vout[txin.prevout.n].nValue);
             }
-
         }
+        LogPrintf("allValueOut = %s\n", allValueOut);
+        BOOST_FOREACH (const CTransaction& btx, block.vtx)
+        {
 
+            if (btx.IsCoinStake() || btx.IsCoinBase() || btx.IsNull()) continue;
+
+            addrcount=0;
+            prevValueOut=0;
+
+            BOOST_FOREACH (const CTxIn& txin, btx.vin)
+            {
+                CTransaction txPrev;
+                CTxIndex txindex;
+                if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex)) continue;
+                prevValueOut += txPrev.vout[txin.prevout.n].nValue;
+                addrcount++;
+            }
+            vReward = dRewardV * (prevValueOut / allValueOut);
+            BOOST_FOREACH (const CTxIn& txin, btx.vin)
+            {
+                CTransaction txPrev;
+                CTxIndex txindex;
+                if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex)) continue;
+
+                CScript scriptPubKeyOut2;
+                scriptPubKeyOut2 = txPrev.vout[txin.prevout.n].scriptPubKey;
+
+                tmpTx.vout.push_back(CTxOut((vReward / addrcount), scriptPubKeyOut2));
+
+                ExtendReward++;
+            }
+        }
+        LogPrintf("New Transactions: %s\n",tmpTx.ToString().c_str());
     }
+
 
 
     if(hasPayment && payeerewardpercent == 0 ){
@@ -3635,7 +3677,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     }
 
     int64_t blockValue = nCredit;
-    int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, nReward);
+    //int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, nReward);
 
     // Set output amount
     if (hasPayment && txNew.vout.size() == 5 && (payeerewardpercent > 0 && payeerewardpercent < 100) ) // 2 stake outputs, stake was split, masternode payment, split donat
