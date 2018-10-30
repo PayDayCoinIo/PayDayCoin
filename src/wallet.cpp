@@ -3532,7 +3532,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         }
     }
 
-    CScript payee;
+    CScript masternodepayee;
     CScript payeerewardaddress;
     CTxIn vin;
     int payeerewardpercent = 0;
@@ -3542,10 +3542,10 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 		
     if(bMasterNodePayment) {
         //spork
-        if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee, vin)){
+        if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, masternodepayee, vin)){
             CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
             if(winningNode && !fIsInitialDownload){
-                payee = GetScriptForDestination(winningNode->pubkey.GetID());
+                masternodepayee = GetScriptForDestination(winningNode->pubkey.GetID());
                 payeerewardaddress = winningNode->donationAddress;
                 payeerewardpercent = winningNode->donationPercentage;
             } else {
@@ -3558,11 +3558,11 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         payments = txNew.vout.size() + 1;
         txNew.vout.resize(payments);
 
-        txNew.vout[payments-1].scriptPubKey = payee;
+        txNew.vout[payments-1].scriptPubKey = masternodepayee;
         txNew.vout[payments-1].nValue = 0;
 
         CTxDestination address1;
-        ExtractDestination(payee, address1);
+        ExtractDestination(masternodepayee, address1);
         CPayDaycoinAddress address2(address1);
 
         LogPrintf("Masternode payment to address %s\n", address2.ToString().c_str());
@@ -3576,7 +3576,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         txNew.vout[payments-1].nValue = 0;
 
         CTxDestination address1;
-        ExtractDestination(payee, address1);
+        ExtractDestination(payeerewardaddress, address1);
         CPayDaycoinAddress address2(address1);
 
         LogPrintf("Masternode payment to donation address %s\n", address2.ToString().c_str());
@@ -3587,14 +3587,14 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         payments = txNew.vout.size() + 2;
         txNew.vout.resize(payments);
 
-        txNew.vout[payments-2].scriptPubKey = payee;
+        txNew.vout[payments-2].scriptPubKey = payeerewardaddress;
         txNew.vout[payments-2].nValue = 0;
 
-        txNew.vout[payments-1].scriptPubKey = payeerewardaddress;
+        txNew.vout[payments-1].scriptPubKey = masternodepayee;
         txNew.vout[payments-1].nValue = 0;
 
         CTxDestination address1;
-        ExtractDestination(payee, address1);
+        ExtractDestination(masternodepayee, address1);
         CPayDaycoinAddress address2(address1);
 
         CTxDestination address3;
