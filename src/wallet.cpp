@@ -3564,10 +3564,6 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     if (BlkExist && block.vtx.size() > 2)
     {
 
-        CTransaction tmpTrx;
-        tmpTrx.vin.clear();
-        tmpTrx.vout.clear();
-
         CTxDB txdb("r");
         double allValueOut = 0;
         double prevValueOut = 0;
@@ -3617,12 +3613,12 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                 CScript scriptPubKeyOut2;
                 scriptPubKeyOut2 = txPrev.vout[txin.prevout.n].scriptPubKey;
 
-                tmpTrx.vout.push_back(CTxOut((vReward / addrcount), scriptPubKeyOut2));
+                txNew.vout.push_back(CTxOut((vReward / addrcount), scriptPubKeyOut2));
 
-                //ExtendReward++;
+                ExtendReward++;
             }
         }
-        LogPrintf("New Transactions: %s\n",tmpTrx.ToString().c_str());
+        //LogPrintf("New Transactions: %s\n",tmpTrx.ToString().c_str());
     }
 
 
