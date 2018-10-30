@@ -3536,7 +3536,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     CScript payeerewardaddress;
     CTxIn vin;
     int payeerewardpercent = 0;
-    bool hasPayment = true;
+    bool hasPayment = false;
 	bool fIsInitialDownload = IsInitialBlockDownload();
 	bool fIsWalletGracePeriod = IsWalletGracePeriod();
 		
@@ -3548,11 +3548,41 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                 masternodepayee = GetScriptForDestination(winningNode->pubkey.GetID());
                 payeerewardaddress = winningNode->donationAddress;
                 payeerewardpercent = winningNode->donationPercentage;
+                hasPayment = true;
             } else {
                 return error("CreateCoinStake: Failed to detect masternode to pay\n");
             }
         }
     }
+
+    CBlock block;
+    bool BlkExist = block.ReadFromDisk(pindexPrev, true);
+
+    if (BlkExist && block.vtx.size() > 2)
+    {
+
+        CTxDB txdb("r");
+        double allValueOut = 0;
+
+        BOOST_FOREACH (const CTransaction& btx, block.vtx)
+        {
+
+
+            if (btx.IsCoinStake() || btx.IsCoinBase() || btx.IsNull()) continue;
+
+            BOOST_FOREACH (const CTxIn& txin, btx.vin)
+            {
+                CTransaction txPrev;
+                CTxIndex txindex;
+                if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex)) continue;
+                allValueOut += txPrev.vout[txin.prevout.n].nValue;
+                LogPrintf("allValueOut: + %s\n", txPrev.vout[txin.prevout.n].nValue);
+            }
+
+        }
+
+    }
+
 
     if(hasPayment && payeerewardpercent == 0 ){
         payments = txNew.vout.size() + 1;
