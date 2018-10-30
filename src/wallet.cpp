@@ -3562,7 +3562,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         txNew.vout[payments-1].nValue = 0;
 
         CTxDestination address1;
-        ExtractDestination(masternodepayee, address1);
+        ExtractDestination(payeerewardaddress, address1);
         CPayDaycoinAddress address2(address1);
 
         LogPrintf("Masternode payment to donation address %s\n", address2.ToString().c_str());
