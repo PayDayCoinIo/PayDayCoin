@@ -3563,17 +3563,18 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 
     if (BlkExist && block.vtx.size() > 2)
     {
-        CTransaction tmpTx;
-        tmpTx.vin.clear();
-        tmpTx.vout.clear();
+
+        CTransaction tmpTrx;
+        tmpTrx.vin.clear();
+        tmpTrx.vout.clear();
 
         CTxDB txdb("r");
         double allValueOut = 0;
         double prevValueOut = 0;
         unsigned int addrcount = 0;
-        int64_t nRewardV = (nReward - masternodePayment) * 0.4;
-        nCredit -= nRewardV;
-        double dRewardV = (nReward - masternodePayment) * 0.4;
+
+        double dRewardV = ((nReward - masternodePayment) / 100) * (100 - 60);
+        nCredit -= dRewardV;
         double vReward = 0;
 
         BOOST_FOREACH (const CTransaction& btx, block.vtx)
@@ -3589,7 +3590,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                 allValueOut += txPrev.vout[txin.prevout.n].nValue;
             }
         }
-        LogPrintf("allValueOut = %s\n", allValueOut);
+
         BOOST_FOREACH (const CTransaction& btx, block.vtx)
         {
 
@@ -3616,12 +3617,12 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                 CScript scriptPubKeyOut2;
                 scriptPubKeyOut2 = txPrev.vout[txin.prevout.n].scriptPubKey;
 
-                tmpTx.vout.push_back(CTxOut((vReward / addrcount), scriptPubKeyOut2));
+                tmpTrx.vout.push_back(CTxOut((vReward / addrcount), scriptPubKeyOut2));
 
-                ExtendReward++;
+                //ExtendReward++;
             }
         }
-        LogPrintf("New Transactions: %s\n",tmpTx.ToString().c_str());
+        LogPrintf("New Transactions: %s\n",tmpTrx.ToString().c_str());
     }
 
 
@@ -3680,7 +3681,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     //int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, nReward);
 
     // Set output amount
-    if (hasPayment && txNew.vout.size() == 5 && (payeerewardpercent > 0 && payeerewardpercent < 100) ) // 2 stake outputs, stake was split, masternode payment, split donat
+    if (hasPayment && txNew.vout.size() == (5 + ExtendReward) && (payeerewardpercent > 0 && payeerewardpercent < 100) ) // 2 stake outputs, stake was split, masternode payment, split donat
     {
         txNew.vout[payments-2].nValue = (masternodePayment / 100) * (100 - payeerewardpercent);
         txNew.vout[payments-1].nValue = masternodePayment - txNew.vout[payments-2].nValue;
@@ -3689,7 +3690,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         txNew.vout[2].nValue = blockValue - txNew.vout[1].nValue;
         //LogPrintf("One \n");
     }
-    else if(hasPayment && txNew.vout.size() == 4 && (payeerewardpercent == 0 || payeerewardpercent == 100)  ) // 2 stake outputs, stake was split, plus a masternode payment
+    else if(hasPayment && txNew.vout.size() == (4 + ExtendReward) && (payeerewardpercent == 0 || payeerewardpercent == 100)  ) // 2 stake outputs, stake was split, plus a masternode payment
     {
         txNew.vout[payments-1].nValue = masternodePayment;
         blockValue -= masternodePayment;
@@ -3697,7 +3698,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         txNew.vout[2].nValue = blockValue - txNew.vout[1].nValue;
         //LogPrintf("Two \n");
     }
-    else if(hasPayment && txNew.vout.size() == 4 && (payeerewardpercent > 0 && payeerewardpercent < 100) )  // only 1 stake output, was not split, no masternode payment
+    else if(hasPayment && txNew.vout.size() == (4 + ExtendReward) && (payeerewardpercent > 0 && payeerewardpercent < 100) )  // only 1 stake output, was not split, no masternode payment
     {
         txNew.vout[payments-2].nValue = (masternodePayment / 100) * (100 - payeerewardpercent);
         txNew.vout[payments-1].nValue = masternodePayment - txNew.vout[payments-2].nValue;
@@ -3705,7 +3706,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         txNew.vout[1].nValue = blockValue;
         //LogPrintf("Three \n");
     }
-    else if(hasPayment && txNew.vout.size() == 3 && (payeerewardpercent == 0 || payeerewardpercent == 100) ) // only 1 stake output, was not split, plus a masternode payment
+    else if(hasPayment && txNew.vout.size() == (3 + ExtendReward) && (payeerewardpercent == 0 || payeerewardpercent == 100) ) // only 1 stake output, was not split, plus a masternode payment
     {
         txNew.vout[payments-1].nValue = masternodePayment;
         blockValue -= masternodePayment;
