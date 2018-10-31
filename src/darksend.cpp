@@ -2299,7 +2299,7 @@ void ThreadCheckDarkSendPool()
                     LOCK(cs_vNodes);
                     BOOST_FOREACH(CNode* pnode, vNodes)
                     {
-                        if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) {
+                        if (pnode->nVersion >= GetPoolPeerProtoVersion()) {
 
                             //keep track of who we've asked for the list
                             if(pnode->HasFulfilledRequest("mnsync")) continue;
