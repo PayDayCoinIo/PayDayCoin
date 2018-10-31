@@ -3538,7 +3538,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     int payeerewardpercent = 0;
     bool hasPayment = true;
 	bool fIsInitialDownload = IsInitialBlockDownload();
-	bool fIsWalletGracePeriod = IsWalletGracePeriod();
+    //bool fIsWalletGracePeriod = IsWalletGracePeriod();
 		
     if(bMasterNodePayment) {
         //spork
