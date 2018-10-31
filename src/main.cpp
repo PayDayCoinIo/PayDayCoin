@@ -1469,7 +1469,7 @@ bool IsWalletGracePeriod()
 		WalletStart = GetTime();
 		LogPrintf("Updated start time is : %d \n", WalletStart);
 	}
-	if (GetTime() < WalletStart + 3600) {
+    if (GetTime() < WalletStart + 60) {
   	return true;
 	}
 	
@@ -2597,12 +2597,12 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                     ExtractDestination(payeerewardaddress, rpDestAddr);
                     CPayDaycoinAddress rpAddress(rpDestAddr);
 
-                    /*bool fIsWalletGracePeriod = IsWalletGracePeriod();
+                    bool fIsWalletGracePeriod = IsWalletGracePeriod();
 					if (fIsWalletGracePeriod) {
                         foundMasternodeAmount = true;
                         foundRewardAmount = true;
 					}
-                    */
+
 
                     if (!foundMasternodeAmount || !foundRewardAmount) {
                         LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindexBest->nHeight + 1);
