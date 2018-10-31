@@ -2292,7 +2292,7 @@ void ThreadCheckDarkSendPool()
             }
 
             //try to sync the masternode list and payment list every 5 seconds from at least 3 nodes
-            if(c % 5 == 0 && RequestedMasterNodeList < 10){
+            if(c % 10 == ){
                 bool fIsInitialDownload = IsInitialBlockDownload();
                 if(!fIsInitialDownload) {
                     LOCK(cs_vNodes);
@@ -2311,7 +2311,7 @@ void ThreadCheckDarkSendPool()
 
                             pnode->PushMessage("mnget"); //sync payees
                             pnode->PushMessage("getsporks"); //get current network sporks
-                            RequestedMasterNodeList++;
+                            //RequestedMasterNodeList++;
                         }
                     }
 
