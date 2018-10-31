@@ -2569,6 +2569,10 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                             if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
                         }
                     }
+                    else
+                    {
+                        LogPrintf("CheckBlock(): GetBlockPayee\n");
+                    }
 
 					for (unsigned int i = 0; i < vtx[1].vout.size(); i++) {
                         
