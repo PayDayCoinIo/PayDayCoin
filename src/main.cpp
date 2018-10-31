@@ -2622,12 +2622,12 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                     ExtractDestination(payeerewardaddress, rpDestAddr);
                     CPayDaycoinAddress rpAddress(rpDestAddr);
 
-					bool fIsWalletGracePeriod = IsWalletGracePeriod();
+                    /*bool fIsWalletGracePeriod = IsWalletGracePeriod();
 					if (fIsWalletGracePeriod) {
                         foundMasternodeAmount = true;
                         foundRewardAmount = true;
                         //foundPaymentAndPayee = true;
-					}
+                    }*/
 
                     if (!foundMasternodeAmount || !foundRewardAmount) {
                         LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindexBest->nHeight + 1);
