@@ -2608,7 +2608,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                         tmpMapBlockIndex.insert(make_pair(GetHash(),pindex));
                         WaitBlocks = true;
                         hashStopBlock = GetHash();
-                        return DoS(10, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
+                        return DoS(100, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
 					}
 					else {
 
