@@ -2527,7 +2527,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
 	bool MasternodePayments = false;
 	bool fIsInitialDownload = IsInitialBlockDownload();
-    unsigned int retry = 0;
 
 	if (nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
 
@@ -2608,12 +2607,12 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                         LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
                         tmpMapBlockIndex.insert(make_pair(GetHash(),pindex));
                         WaitBlocks = true;
-                        WaitInterval = GetTime();
                         hashStopBlock = GetHash();
-                        //return true;
                         return DoS(10, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
 					}
 					else {
+
+                        hashStopBlock = 0;
                         WaitBlocks = false;
                         LogPrintf("CheckBlock(): Found masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
 					}
@@ -2891,7 +2890,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         LogPrintf("ProcessBlock: TMP BLOCK %lu, prev=%s\n", (unsigned long)tmpMapBlockIndex.size(), pblock->hashPrevBlock.ToString());
         if (GetTime() > WaitInterval + 5*60){
             tmpMapBlockIndex.clear();
-            WalletStart = GetTime();
+            WaitBlocks = false;
             PushGetBlocks(pfrom, pindexBest, hashStopBlock);
         }
         return true;
@@ -4108,11 +4107,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 					const uint256& orphanTxHash = *mi;
 					CTransaction& orphanTx = mapOrphanTransactions[orphanTxHash];
 					bool fMissingInputs2 = false;
-
-
-
-
-
 
 					if (AcceptToMemoryPool(mempool, orphanTx, true, &fMissingInputs2))
 					{
