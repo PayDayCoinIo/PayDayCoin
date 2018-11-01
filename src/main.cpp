@@ -2892,8 +2892,9 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             tmpMapBlockIndex.clear();
             WaitBlocks = false;
             PushGetBlocks(pfrom, pindexBest, hashStopBlock);
+            return true;
         }
-        return true;
+
     }
 
 	// If we don't already have its previous block, shunt it off to holding area until we get it
