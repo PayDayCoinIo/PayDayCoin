@@ -83,6 +83,8 @@ extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
+extern std::map<uint256, CBlockIndex*> tmpMapBlockIndex;
+
 extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern CBlockIndex* pindexGenesisBlock;
 extern unsigned int nStakeMinAge;
@@ -93,6 +95,7 @@ extern int nBestHeight;
 extern uint256 nBestChainTrust;
 extern uint256 nBestInvalidTrust;
 extern uint256 hashBestChain;
+extern uint256 hashStopBlock;
 extern CBlockIndex* pindexBest;
 extern uint64_t nLastBlockTx;
 extern uint64_t nLastBlockSize;
@@ -111,6 +114,11 @@ extern unsigned int nDerivationMethodIndex;
 
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
+
+extern int64_t WalletStart;
+
+extern bool WaitBlocks;
+extern int64_t WaitInterval;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;

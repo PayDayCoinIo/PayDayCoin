@@ -2291,33 +2291,6 @@ void ThreadCheckDarkSendPool()
                 CleanTransactionLocksList();
             }
 
-            //try to sync the masternode list and payment list every 5 seconds from at least 3 nodes
-            if(c % 10 == 0){
-                bool fIsInitialDownload = IsInitialBlockDownload();
-                if(!fIsInitialDownload) {
-                    LOCK(cs_vNodes);
-                    BOOST_FOREACH(CNode* pnode, vNodes)
-                    {
-                        if (pnode->nVersion >= GetPoolPeerProtoVersion()) {
-
-                            //keep track of who we've asked for the list
-                            if(pnode->HasFulfilledRequest("mnsync")) continue;
-                            pnode->FulfilledRequest("mnsync");
-
-                            LogPrintf("Successfully synced, asking for Masternode list and payment list\n");
-
-                            //request full mn list only if masternodes.dat was updated quite a long time ago
-                            mnodeman.DsegUpdate(pnode);
-
-                            pnode->PushMessage("mnget"); //sync payees
-                            pnode->PushMessage("getsporks"); //get current network sporks
-                            //RequestedMasterNodeList++;
-                        }
-                    }
-
-                }
-            }
-
             //if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
 
             darkSendPool.CheckTimeout();

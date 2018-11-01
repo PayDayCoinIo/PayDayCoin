@@ -36,6 +36,7 @@ using namespace boost;
 //
 
 int64_t WalletStart = GetTime();
+int64_t WaitInterval = 15*60;
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
@@ -45,6 +46,7 @@ CCriticalSection cs_main;
 CTxMemPool mempool;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
+map<uint256, CBlockIndex*> tmpMapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
@@ -59,7 +61,7 @@ int nBestHeight = -1;
 
 uint256 nBestChainTrust = 0;
 uint256 nBestInvalidTrust = 0;
-
+uint256 hashStopBlock = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64_t nTimeBestReceived = 0;
@@ -67,7 +69,7 @@ bool fImporting = false;
 bool fReindex = false;
 bool fAddrIndex = false;
 bool fHaveGUI = false;
-
+bool WaitBlocks = false;
 
 struct COrphanBlock {
 	uint256 hashBlock;
@@ -75,6 +77,7 @@ struct COrphanBlock {
 	std::pair<COutPoint, unsigned int> stake;
 	vector<unsigned char> vchBlock;
 };
+
 map<uint256, COrphanBlock*> mapOrphanBlocks;
 multimap<uint256, COrphanBlock*> mapOrphanBlocksByPrev;
 set<pair<COutPoint, unsigned int> > setStakeSeenOrphan;
@@ -1469,7 +1472,7 @@ bool IsWalletGracePeriod()
 		WalletStart = GetTime();
 		LogPrintf("Updated start time is : %d \n", WalletStart);
 	}
-    if (GetTime() < WalletStart + 60) {
+    if (GetTime() < WalletStart + 3600) {
   	return true;
 	}
 	
@@ -2453,11 +2456,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos, const u
 		hashPrevBestCoinBase = vtx[0].GetHash();
 	}
 
-
-
-
-
-
 	return true;
 }
 
@@ -2529,8 +2527,10 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
 	bool MasternodePayments = false;
 	bool fIsInitialDownload = IsInitialBlockDownload();
+    unsigned int retry = 0;
 
 	if (nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
+
 	if (!fIsInitialDownload)
 	{
 		if (MasternodePayments)
@@ -2539,7 +2539,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
 			CBlockIndex *pindex = pindexBest;
 			if (IsProofOfStake() && pindex != NULL) {
-				if (pindex->GetBlockHash() == hashPrevBlock) {
+                if (pindex->GetBlockHash() == hashPrevBlock && !WaitBlocks) {
 
 					// If we don't already have its previous block, skip masternode payment step
                     CAmount masternodePaymentAmount; // = GetMasternodePayment(pindex->nHeight+1, nReward);
@@ -2554,7 +2554,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                     int payeerewardpercent = 0;
 					CTxIn vin;
 
-                    if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, masternodepayee, vin)) {
+                    if (!masternodePayments.GetBlockPayee(pindex->nHeight + 1, masternodepayee, vin)) {
                         CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
                         if (winningNode) {
                             masternodepayee = GetScriptForDestination(winningNode->pubkey.GetID());
@@ -2566,7 +2566,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                             foundMasternodeAmount = true; //doesn't require a specific payee
                             foundRewardAmount = true;
 
-                            if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
+                            if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindex->nHeight + 1);
                         }
                     }
                     else
@@ -2586,7 +2586,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                             foundRewardAmount = true;
                             continue;
                         }
-
 					}
 
                     CTxDestination mnDestAddr;
@@ -2603,17 +2602,21 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                         foundRewardAmount = true;
 					}
 
-
                     if (!foundMasternodeAmount || !foundRewardAmount) {
-                        LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindexBest->nHeight + 1);
-                        return DoS(100, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
+                        LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
+                        tmpMapBlockIndex.insert(make_pair(GetHash(),pindex));
+                        WaitBlocks = true;
+                        WaitInterval = GetTime();
+                        hashStopBlock = GetHash();
+                        //return DoS(100, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
 					}
 					else {
-                        LogPrintf("CheckBlock(): Found masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindexBest->nHeight + 1);
+                        WaitBlocks = false;
+                        LogPrintf("CheckBlock(): Found masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
 					}
 				}
 				else {
-                    if (fDebug) { LogPrintf("CheckBlock(): Skipping masternode payment check - nHeight %d Hash %s\n", pindexBest->nHeight + 1, GetHash().ToString().c_str()); }
+                    if (fDebug) { LogPrintf("CheckBlock(): Skipping masternode payment check - nHeight %d Hash %s\n", pindex->nHeight + 1, GetHash().ToString().c_str()); }
 				}
 			}
 			else {
@@ -2879,8 +2882,20 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 	if (!pblock->CheckBlock())
 		return error("ProcessBlock() : CheckBlock FAILED");
 
+    if (tmpMapBlockIndex.count(pblock->hashPrevBlock)) {
+        CBlockIndex *pindex = pindexBest;
+        tmpMapBlockIndex.insert(make_pair(hash,pindex));
+        LogPrintf("ProcessBlock: TMP BLOCK %lu, prev=%s\n", (unsigned long)tmpMapBlockIndex.size(), pblock->hashPrevBlock.ToString());
+        if (GetTime() > WaitInterval + 5*60){
+            tmpMapBlockIndex.clear();
+            WalletStart = GetTime();
+            PushGetBlocks(pfrom, pindexBest, hashStopBlock);
+        }
+        return true;
+    }
+
 	// If we don't already have its previous block, shunt it off to holding area until we get it
-	if (!mapBlockIndex.count(pblock->hashPrevBlock))
+    if (!mapBlockIndex.count(pblock->hashPrevBlock))
 	{
 		LogPrintf("ProcessBlock: ORPHAN BLOCK %lu, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->hashPrevBlock.ToString());
 
@@ -4169,7 +4184,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 				pfrom->PushAddress(addr);
 	}
 
-
 	else if (strCommand == "mempool")
 	{
 		LOCK(cs_main);
@@ -4187,7 +4201,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		if (vInv.size() > 0)
 			pfrom->PushMessage("inv", vInv);
 	}
-
 
 	else if (strCommand == "ping")
 	{
