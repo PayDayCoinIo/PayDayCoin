@@ -1472,10 +1472,11 @@ bool IsWalletGracePeriod()
 		WalletStart = GetTime();
 		LogPrintf("Updated start time is : %d \n", WalletStart);
 	}
-    if (GetTime() < WalletStart + 30*60) {
-  	return true;
-	}
-	
+
+    CBlockIndex* pindex = pindexBest;
+
+    if ((GetTime() < WalletStart + 30*60) || !(GetTime() < pindex->GetBlockTime() + 60)) return true;
+
 	return false;		
 }
 
