@@ -2610,7 +2610,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                         WaitBlocks = true;
                         WaitInterval = GetTime();
                         hashStopBlock = GetHash();
-                        //return DoS(100, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
+                        //return true;
+                        return DoS(10, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
 					}
 					else {
                         WaitBlocks = false;
