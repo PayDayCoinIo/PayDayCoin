@@ -1529,7 +1529,7 @@ void static StartSync(const vector<CNode*> &vNodes) {
 
     // fImporting and fReindex are accessed out of cs_main here, but only
     // as an optimization - they are checked again in SendMessages.
-    if (fImporting || fReindex || )
+    if (fImporting || fReindex)
         return;
     int nBestCount = nBestHeight;
     // Iterate over all nodes
