@@ -1531,17 +1531,17 @@ void static StartSync(const vector<CNode*> &vNodes) {
     // as an optimization - they are checked again in SendMessages.
     if (fImporting || fReindex)
         return;
-    LogPrintf("StartSync(): Start Sync select\n");
+    //LogPrintf("StartSync(): Start Sync select\n");
     // Iterate over all nodes
     BOOST_FOREACH(CNode* pnode, vNodes) {
         // check preconditions for allowing a sync
         if (!pnode->fClient && !pnode->fOneShot &&
             !pnode->fDisconnect && pnode->fSuccessfullyConnected &&
-            (pnode->nStartingHeight > nBestHeight - 144) &&
+            (pnode->nStartingHeight > nCount) &&
             (pnode->nVersion < NOBLKS_VERSION_START || pnode->nVersion >= GetPoolPeerProtoVersion())) {
             // if ok, compare node's score with the best so far
             //int64_t nScore = NodeSyncScore(pnode);
-            if (pnodeNewSync == NULL || (pnode->nLastRecv > nScore  && pnode->nStartingHeight > nCount)) {
+            if (pnodeNewSync == NULL || pnode->nLastRecv > nScore) {
                 pnodeNewSync = pnode;
                 nScore = pnode->nLastRecv;
                 nCount = pnode->nStartingHeight;
