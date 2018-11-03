@@ -1519,32 +1519,30 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
 
 // for now, use a very simple selection metric: the node from which we received
 // most recently
-/*static int64_t NodeSyncScore(const CNode *pnode) {
+
+static int64_t NodeSyncScore(const CNode *pnode) {
     return pnode->nLastRecv;
 }
-*/
+
 void static StartSync(const vector<CNode*> &vNodes) {
     CNode *pnodeNewSync = NULL;
-    int64_t nCount = 0;
     int64_t nScore = 0;
     // fImporting and fReindex are accessed out of cs_main here, but only
     // as an optimization - they are checked again in SendMessages.
     if (fImporting || fReindex)
         return;
-    //LogPrintf("StartSync(): Start Sync select\n");
+
     // Iterate over all nodes
     BOOST_FOREACH(CNode* pnode, vNodes) {
         // check preconditions for allowing a sync
         if (!pnode->fClient && !pnode->fOneShot &&
             !pnode->fDisconnect && pnode->fSuccessfullyConnected &&
-            //(pnode->nStartingHeight > nCount) &&
+            (pnode->nStartingHeight > nBestHeight - 144) &&
             (pnode->nVersion < NOBLKS_VERSION_START || pnode->nVersion >= GetPoolPeerProtoVersion())) {
             // if ok, compare node's score with the best so far
-            //int64_t nScore = NodeSyncScore(pnode);
-            if (pnodeNewSync == NULL || pnode->nStartingHeight > nCount) {
+            nScore = NodeSyncScore(pnode);
+            if (pnodeNewSync == NULL || pnode->nLastRecv > nScore ) {
                 pnodeNewSync = pnode;
-                nScore = pnode->nLastRecv;
-                nCount = pnode->nStartingHeight;
             }
         }
     }
