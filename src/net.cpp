@@ -1537,11 +1537,11 @@ void static StartSync(const vector<CNode*> &vNodes) {
         // check preconditions for allowing a sync
         if (!pnode->fClient && !pnode->fOneShot &&
             !pnode->fDisconnect && pnode->fSuccessfullyConnected &&
-            (pnode->nStartingHeight > nCount) &&
+            //(pnode->nStartingHeight > nCount) &&
             (pnode->nVersion < NOBLKS_VERSION_START || pnode->nVersion >= GetPoolPeerProtoVersion())) {
             // if ok, compare node's score with the best so far
             //int64_t nScore = NodeSyncScore(pnode);
-            if (pnodeNewSync == NULL || pnode->nLastRecv > nScore) {
+            if (pnodeNewSync == NULL || pnode->nStartingHeight > nCount) {
                 pnodeNewSync = pnode;
                 nScore = pnode->nLastRecv;
                 nCount = pnode->nStartingHeight;
