@@ -1531,7 +1531,7 @@ void static StartSync(const vector<CNode*> &vNodes) {
     // as an optimization - they are checked again in SendMessages.
     if (fImporting || fReindex)
         return;
-
+    LogPrintf("StartSync(): Start Sync select\n");
     // Iterate over all nodes
     BOOST_FOREACH(CNode* pnode, vNodes) {
         // check preconditions for allowing a sync
