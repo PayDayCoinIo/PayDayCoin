@@ -2884,7 +2884,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 	// Preliminary checks
 	if (!pblock->CheckBlock())
 		return error("ProcessBlock() : CheckBlock FAILED");
-
+/*
     if (tmpMapBlockIndex.count(pblock->hashPrevBlock)) {
         CBlockIndex *pindex = pindexBest;
         tmpMapBlockIndex.insert(make_pair(hash,pindex));
@@ -2897,7 +2897,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         }
         return true;
     }
-
+*/
 	// If we don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
 	{
