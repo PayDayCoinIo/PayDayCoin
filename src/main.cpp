@@ -4307,10 +4307,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 			}
 		}
 	}
-    else if (strCommand == "softrestart")
-    {
-        NeedToReload = true;
-    }
 
 	else
 	{
