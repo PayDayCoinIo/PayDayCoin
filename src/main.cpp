@@ -4307,7 +4307,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 			}
 		}
 	}
-
+    else if (strCommand == "softrestart")
+    {
+        NeedToReload = true;
+    }
 
 	else
 	{
@@ -4421,11 +4424,6 @@ bool ProcessMessages(CNode* pfrom)
                 LogPrintf("CheckBlockChain at %s\n", nTimeLastCheckAcception);
                 if (nBestHeight - nLastCheckBlockHeight < 1) {
                     LogPrintf("CheckBlockChain: Detect Sync Problem, try restart\n");
-
-                    mapOrphanBlocks.clear();
-                    mapOrphanBlocksByPrev.clear();
-                    mapOrphanTransactions.clear();
-                    mapOrphanTransactionsByPrev.clear();
                     NeedToReload = true;
                     //PushGetBlocks(pfrom, pindexBest, uint256(0));
 
@@ -4524,8 +4522,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 			PushGetBlocks(pto, pindexBest, uint256(0));
 		}
         if (NeedToReload) {
-            LogPrintf("Sync problem: Request block again.\n");
+            LogPrintf("CheckBlockChain: Sync problem: Request block again.\n");
             NeedToReload = false;
+            mapOrphanBlocks.clear();
+            mapOrphanBlocksByPrev.clear();
+            mapOrphanTransactions.clear();
+            mapOrphanTransactionsByPrev.clear();
             PushGetBlocks(pto, pindexBest, uint256(0));
         }
 		// Resend wallet transactions that haven't gotten in a block yet
