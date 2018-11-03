@@ -1574,7 +1574,7 @@ void ThreadMessageHandler()
             }
         }
 
-        if (!fHaveSyncNode)
+        if (!fHaveSyncNode || NeedToReload)
             StartSync(vNodesCopy);
 
         // Poll the connected nodes for messages

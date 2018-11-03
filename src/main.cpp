@@ -4428,6 +4428,7 @@ bool ProcessMessages(CNode* pfrom)
                     mapOrphanTransactionsByPrev.clear();
                     NeedToReload = true;
                     //PushGetBlocks(pfrom, pindexBest, uint256(0));
+
                 }
                 nLastCheckBlockHeight = nBestHeight;
             }
