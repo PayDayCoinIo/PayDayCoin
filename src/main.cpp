@@ -4420,7 +4420,7 @@ bool ProcessMessages(CNode* pfrom)
                 nTimeLastCheckAcception = GetTime();
                 LogPrintf("CheckBlockChain at %s\n", nTimeLastCheckAcception);
                 if (nBestHeight - nLastCheckBlockHeight < 1) {
-                    LogPrintf("CheckBlockChain: Detect Sync Problem, try restart\n", nTimeLastCheckAcception);
+                    LogPrintf("CheckBlockChain: Detect Sync Problem, try restart\n");
 
                     mapOrphanBlocks.clear();
                     mapOrphanBlocksByPrev.clear();
