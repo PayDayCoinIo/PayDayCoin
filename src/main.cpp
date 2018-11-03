@@ -36,7 +36,7 @@ using namespace boost;
 //
 
 int64_t WalletStart = GetTime();
-int64_t WaitInterval = 15*60;
+int64_t WaitInterval = 5*60;
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
@@ -58,7 +58,7 @@ unsigned int nModifierInterval = 2 * 60; // time to elapse before new modifier i
 int nCoinbaseMaturity = 63;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
-
+int64_t nTimeLastCheckAcception = GetTime();
 uint256 nBestChainTrust = 0;
 uint256 nBestInvalidTrust = 0;
 uint256 hashStopBlock = 0;
@@ -69,7 +69,7 @@ bool fImporting = false;
 bool fReindex = false;
 bool fAddrIndex = false;
 bool fHaveGUI = false;
-bool WaitBlocks = false;
+bool NeedToReload = false;
 
 struct COrphanBlock {
 	uint256 hashBlock;
@@ -1475,7 +1475,7 @@ bool IsWalletGracePeriod()
 
     CBlockIndex* pindex = pindexBest;
 
-    if ((GetTime() < WalletStart + 30*60) || !(GetTime() < pindex->GetBlockTime() + 60)) return true;
+    if ((GetTime() < WalletStart + 30*60) && !(GetTime() < pindex->GetBlockTime() + 60)) return true;
 
 	return false;		
 }
@@ -1493,7 +1493,7 @@ bool IsInitialBlockDownload()
 		nLastUpdate = GetTime();
 	}
 	return (GetTime() - nLastUpdate < 15 &&
-		pindexBest->GetBlockTime() < GetTime() - 8 * 60 * 60);
+        pindexBest->GetBlockTime() < GetTime() - 5 * 60 * 60);
 }
 
 void static InvalidChainFound(CBlockIndex* pindexNew)
@@ -2539,7 +2539,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
 			CBlockIndex *pindex = pindexBest;
 			if (IsProofOfStake() && pindex != NULL) {
-                if (pindex->GetBlockHash() == hashPrevBlock && !WaitBlocks) {
+                if (pindex->GetBlockHash() == hashPrevBlock) {
 
 					// If we don't already have its previous block, skip masternode payment step
                     CAmount masternodePaymentAmount; // = GetMasternodePayment(pindex->nHeight+1, nReward);
@@ -2606,15 +2606,15 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
                     if (!foundMasternodeAmount || !foundRewardAmount) {
                         LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
-                        tmpMapBlockIndex.insert(make_pair(GetHash(),pindex));
-                        WaitBlocks = true;
-                        hashStopBlock = GetHash();
+                        //tmpMapBlockIndex.insert(make_pair(GetHash(),pindex));
+                        //WaitBlocks = true;
+                        //hashStopBlock = GetHash();
                         return DoS(100, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
 					}
 					else {
 
-                        hashStopBlock = 0;
-                        WaitBlocks = false;
+                        //hashStopBlock = 0;
+                        //WaitBlocks = false;
                         LogPrintf("CheckBlock(): Found masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
 					}
 				}
@@ -2888,7 +2888,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (tmpMapBlockIndex.count(pblock->hashPrevBlock)) {
         CBlockIndex *pindex = pindexBest;
         tmpMapBlockIndex.insert(make_pair(hash,pindex));
-        LogPrintf("ProcessBlock: TMP BLOCK %lu, prev=%s\n", (unsigned long)tmpMapBlockIndex.size(), pblock->hashPrevBlock.ToString());
+        //LogPrintf("ProcessBlock: TMP BLOCK %lu, prev=%s\n", (unsigned long)tmpMapBlockIndex.size(), pblock->hashPrevBlock.ToString());
         if (GetTime() > WaitInterval + 5*60){
             tmpMapBlockIndex.clear();
             WaitBlocks = false;
@@ -3367,13 +3367,6 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 		}
 	}
 }
-
-
-
-
-
-
-
 
 
 
@@ -4421,6 +4414,22 @@ bool ProcessMessages(CNode* pfrom)
 		try
 		{
 			fRet = ProcessMessage(pfrom, strCommand, vRecv);
+
+            if (GetTime() > nTimeLastCheckAcception + WaitInterval) {
+                nTimeLastCheckAcception = GetTime();
+                LogPrintf("CheckBlockChain at %s\n", nTimeLastCheckAcception);
+                if (nBestHeight - nLastCheckBlockHeight < 1) {
+                    LogPrintf("CheckBlockChain: Detect Sync Problem, try restart\n", nTimeLastCheckAcception);
+
+                    mapOrphanBlocks.clear();
+                    mapOrphanBlocksByPrev.clear();
+                    mapOrphanTransactions.clear();
+                    mapOrphanTransactionsByPrev.clear();
+                    NeedToReload = true;
+                    //PushGetBlocks(pfrom, pindexBest, uint256(0));
+                }
+            }
+
 			boost::this_thread::interruption_point();
 		}
 		catch (std::ios_base::failure& e)
@@ -4451,7 +4460,7 @@ bool ProcessMessages(CNode* pfrom)
 		}
 
 		if (!fRet)
-			LogPrintf("ProcessMessage(%s, %u bytes) FAILED\n", strCommand, nMessageSize);
+			LogPrintf("ProcessMessage(%s, %u bytes) FAILED\n", strCommand, nMessageSize);        
 
 		break;
 	}
@@ -4511,7 +4520,11 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 			pto->fStartSync = false;
 			PushGetBlocks(pto, pindexBest, uint256(0));
 		}
-
+        if (NeedToReload) {
+            LogPrintf("Sync problem: Request block again.\n");
+            NeedToReload = false;
+            PushGetBlocks(pto, pindexBest, uint256(0));
+        }
 		// Resend wallet transactions that haven't gotten in a block yet
 		// Except during reindex, importing and IBD, when old wallet
 		// transactions become unconfirmed and spams other nodes.
@@ -4665,7 +4678,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 	return true;
 }
 
+bool CheckBlockAcception()
+{
 
+
+    return true;
+}
 
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
 {

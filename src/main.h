@@ -92,6 +92,7 @@ extern unsigned int nStakeMaxAge;
 extern unsigned int nNodeLifespan;
 extern int nCoinbaseMaturity;
 extern int nBestHeight;
+extern int nLastCheckBlockHeight;
 extern uint256 nBestChainTrust;
 extern uint256 nBestInvalidTrust;
 extern uint256 hashBestChain;
@@ -116,8 +117,9 @@ extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
 
 extern int64_t WalletStart;
+extern int64_t nTimeLastCheckAcception;
 
-extern bool WaitBlocks;
+extern bool NeedToReload;
 extern int64_t WaitInterval;
 
 // Minimum disk space required - used in CheckDiskSpace()
@@ -157,6 +159,7 @@ CBlockIndex* FindBlockByHeight(int nHeight);
 bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles);
+bool CheckBlockAcception();
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);

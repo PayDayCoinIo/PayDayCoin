@@ -1549,7 +1549,6 @@ void static StartSync(const vector<CNode*> &vNodes) {
         }
     }
 
-
     // if a new sync candidate was found, start sync!
     if (pnodeNewSync) {
         pnodeNewSync->fStartSync = true;
