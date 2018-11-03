@@ -1520,7 +1520,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
 // for now, use a very simple selection metric: the node from which we received
 // most recently
 static int64_t NodeSyncScore(const CNode *pnode) {
-    return (pnode->nLastRecv - pnode->nLastSend);
+    return pnode->nLastRecv;
 }
 
 void static StartSync(const vector<CNode*> &vNodes) {
@@ -1541,7 +1541,7 @@ void static StartSync(const vector<CNode*> &vNodes) {
             (pnode->nVersion < NOBLKS_VERSION_START || pnode->nVersion >= GetPoolPeerProtoVersion())) {
             // if ok, compare node's score with the best so far
             int64_t nScore = NodeSyncScore(pnode);
-            if (pnodeNewSync == NULL || nScore < nBestScore) {
+            if (pnodeNewSync == NULL || nScore > nBestScore) {
                 pnodeNewSync = pnode;
                 nBestScore = nScore;
                 nBestCount = pnode->nStartingHeight;
