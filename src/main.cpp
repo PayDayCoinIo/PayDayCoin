@@ -58,6 +58,7 @@ unsigned int nModifierInterval = 2 * 60; // time to elapse before new modifier i
 int nCoinbaseMaturity = 63;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
+int nLastCheckBlockHeight = 0;
 int64_t nTimeLastCheckAcception = GetTime();
 uint256 nBestChainTrust = 0;
 uint256 nBestInvalidTrust = 0;
@@ -4428,6 +4429,7 @@ bool ProcessMessages(CNode* pfrom)
                     NeedToReload = true;
                     //PushGetBlocks(pfrom, pindexBest, uint256(0));
                 }
+                nLastCheckBlockHeight = nBestHeight;
             }
 
 			boost::this_thread::interruption_point();
