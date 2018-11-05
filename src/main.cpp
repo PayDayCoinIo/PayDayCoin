@@ -4525,10 +4525,13 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 if (pto != cnode) cnode->fDisconnect = true;
 
             const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+            CNode* rnode = NULL;
             BOOST_FOREACH(const CDNSSeedData &seed, vSeeds)
             {
-                CAddress addr;
-                ConnectNode(addr, seed.host.c_str());
+                if (rnode == NULL) {
+                    CAddress addr;
+                    rnode = ConnectNode(addr, seed.host.c_str());
+                }
             }
 
             mapOrphanBlocks.clear();
