@@ -4519,12 +4519,30 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 		}
         if (NeedToReload) {
             LogPrintf("CheckBlockChain: Sync problem: Request block again.\n");
-            NeedToReload = false;
+
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* cnode, vNodes)
+                if (pto != cnode) cnode->fDisconnect = true;
+
+            const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+            BOOST_FOREACH(const CDNSSeedData &seed, vSeeds)
+            {
+                CAddress addr;
+                ConnectNode(addr, seed.host.c_str());
+            }
+
             mapOrphanBlocks.clear();
             mapOrphanBlocksByPrev.clear();
             mapOrphanTransactions.clear();
             mapOrphanTransactionsByPrev.clear();
+            /*
+            CAddress addr;
+            ConnectNode(addr, strNode.c_str());
+            */
+
             PushGetBlocks(pto, pindexBest, uint256(0));
+
+            NeedToReload = false;
         }
 		// Resend wallet transactions that haven't gotten in a block yet
 		// Except during reindex, importing and IBD, when old wallet
