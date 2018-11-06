@@ -129,7 +129,7 @@ bool AppInit(int argc, char* argv[])
     }
     Shutdown();
 
-    if (NeedToRestart) fprintf(stdout, "\n************************\nRestart requested 2\n");
+    //if (NeedToRestart) fprintf(stdout, "\n************************\nRestart requested 2\n");
 
     return fRet;
 }
@@ -145,7 +145,10 @@ int main(int argc, char* argv[])
 
     fRet = AppInit(argc, argv);
 
-    if (NeedToRestart) fprintf(stdout, "\n************************\nRestart requested 3\n");
+    if (NeedToRestart) {
+        fRet = AppInit(argc, argv);
+        fprintf(stdout, "\n************************\nRestart requested 3\n");
+    }
 
     if (fRet && fDaemon)
         return 0;
