@@ -145,6 +145,7 @@ extern bool fNoListen;
 extern bool fLogTimestamps;
 extern bool fMasternodeSoftLock;
 extern volatile bool fReopenDebugLog;
+extern bool NeedToReload;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();

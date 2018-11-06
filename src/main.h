@@ -119,7 +119,7 @@ extern bool fLargeWorkInvalidChainFound;
 extern int64_t WalletStart;
 extern int64_t nTimeLastCheckAcception;
 
-extern bool NeedToReload;
+
 extern int64_t WaitInterval;
 
 // Minimum disk space required - used in CheckDiskSpace()

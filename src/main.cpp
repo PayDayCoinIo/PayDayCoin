@@ -70,7 +70,6 @@ bool fImporting = false;
 bool fReindex = false;
 bool fAddrIndex = false;
 bool fHaveGUI = false;
-bool NeedToReload = false;
 
 struct COrphanBlock {
 	uint256 hashBlock;

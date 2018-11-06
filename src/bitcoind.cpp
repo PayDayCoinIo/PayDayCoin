@@ -126,6 +126,7 @@ bool AppInit(int argc, char* argv[])
 }
 
 extern void noui_connect();
+
 int main(int argc, char* argv[])
 {
     bool fRet = false;
@@ -134,6 +135,8 @@ int main(int argc, char* argv[])
     noui_connect();
 
     fRet = AppInit(argc, argv);
+
+    if (fRet && NeedToReload) PrintException(NULL, "Should be stop");
 
     if (fRet && fDaemon)
         return 0;
