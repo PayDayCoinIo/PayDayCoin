@@ -211,8 +211,8 @@ Value stop(const Array& params, bool fHelp)
 
 Value hardrestart(const Array& params, bool fHelp)
 {
-   StartShutdown();
-   NeedToReload = true;
+   //StartShutdown();
+   NeedToRestart = true;
    return "Hard Restart";
 }
 

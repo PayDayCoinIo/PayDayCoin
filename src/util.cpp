@@ -104,6 +104,7 @@ bool fLogTimestamps = false;
 bool fMasternodeSoftLock = false;
 volatile bool fReopenDebugLog = false;
 bool NeedToReload = false;
+bool NeedToRestart = false;
 
 // Init OpenSSL library multithreading support
 static CCriticalSection** ppmutexOpenSSL;

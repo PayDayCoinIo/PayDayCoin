@@ -83,7 +83,7 @@ bool AppInit(int argc, char* argv[])
                 return false;
             }
             int ret = CommandLineRPC(argc, argv);
-            if (NeedToReload) fprintf(stdout, "\n************************\nRestart requested 1\n");
+            if (NeedToRestart) fprintf(stdout, "\n************************\nRestart requested 1\n");
             exit(ret);
         }
 #if !WIN32
@@ -129,7 +129,7 @@ bool AppInit(int argc, char* argv[])
     }
     Shutdown();
 
-    if (NeedToReload) fprintf(stdout, "\n************************\nRestart requested 2\n");
+    if (NeedToRestart) fprintf(stdout, "\n************************\nRestart requested 2\n");
 
     return fRet;
 }
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 
     fRet = AppInit(argc, argv);
 
-    if (NeedToReload) fprintf(stdout, "\n************************\nRestart requested 3\n");
+    if (NeedToRestart) fprintf(stdout, "\n************************\nRestart requested 3\n");
 
     if (fRet && fDaemon)
         return 0;
