@@ -122,6 +122,8 @@ bool AppInit(int argc, char* argv[])
     }
     Shutdown();
 
+    if (NeedToReload) PrintException(NULL, "Should be stop");
+
     return fRet;
 }
 
@@ -136,7 +138,7 @@ int main(int argc, char* argv[])
 
     fRet = AppInit(argc, argv);
 
-    if (fRet && NeedToReload) PrintException(NULL, "Should be stop");
+    if (NeedToReload) PrintException(NULL, "Should be stop");
 
     if (fRet && fDaemon)
         return 0;
