@@ -146,6 +146,7 @@ int main(int argc, char* argv[])
     fRet = AppInit(argc, argv);
 
     if (NeedToRestart) {
+        noui_connect();
         fRet = AppInit(argc, argv);
         fprintf(stdout, "\n************************\nRestart requested 3\n");
     }
