@@ -25,6 +25,12 @@ void WaitForShutdown(boost::thread_group* threadGroup)
     }
 }
 
+bool RequestRestart(boost::thread_group* threadGroup)
+{
+
+
+    return true;
+}
 //////////////////////////////////////////////////////////////////////////////
 //
 // Start
@@ -77,6 +83,7 @@ bool AppInit(int argc, char* argv[])
                 return false;
             }
             int ret = CommandLineRPC(argc, argv);
+            if (NeedToReload) fprintf(stdout, "\n************************\nRestart requested 1\n",);
             exit(ret);
         }
 #if !WIN32
@@ -103,7 +110,7 @@ bool AppInit(int argc, char* argv[])
         }
 #endif
 
-		fRet = AppInit2(threadGroup);
+        fRet = AppInit2(threadGroup);
     }
     catch (std::exception& e) {
         PrintException(&e, "AppInit()");
@@ -122,7 +129,7 @@ bool AppInit(int argc, char* argv[])
     }
     Shutdown();
 
-    if (NeedToReload) PrintException(NULL, "Should be stop");
+    if (NeedToReload) fprintf(stdout, "\n************************\nRestart requested 2\n",);
 
     return fRet;
 }
@@ -138,7 +145,7 @@ int main(int argc, char* argv[])
 
     fRet = AppInit(argc, argv);
 
-    if (NeedToReload) PrintException(NULL, "Should be stop");
+    if (NeedToReload) fprintf(stdout, "\n************************\nRestart requested 3\n",);
 
     if (fRet && fDaemon)
         return 0;
