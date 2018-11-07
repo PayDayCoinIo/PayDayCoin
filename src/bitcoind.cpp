@@ -136,6 +136,9 @@ int main(int argc, char* argv[])
 
     fRet = AppInit(argc, argv);
 
+    fprintf(stdout, "\n************************\nRestart requested 3\n");
+
+
     if (fRet && fDaemon)
         return 0;
 
