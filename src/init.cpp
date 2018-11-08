@@ -104,6 +104,50 @@ bool ShutdownRequested()
 
 static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;
 
+
+void Restart()
+{
+    fRequestShutdown = true; // Needed when we shutdown the wallet
+    LogPrintf("Restart: In progress...\n");
+    static CCriticalSection cs_Shutdown;
+    TRY_LOCK(cs_Shutdown, lockShutdown);
+    if (!lockShutdown) return;
+
+    RenameThread("PayDay-restart");
+    mempool.AddTransactionsUpdated(1);
+    StopRPCThreads();
+    SecureMsgShutdown();
+
+#ifdef ENABLE_WALLET
+    ShutdownRPCMining();
+    if (pwalletMain)
+        bitdb.Flush(false);
+#endif
+    StopNode();
+    UnregisterNodeSignals(GetNodeSignals());
+    DumpMasternodes();
+    {
+        LOCK(cs_main);
+#ifdef ENABLE_WALLET
+        if (pwalletMain)
+            pwalletMain->SetBestChain(CBlockLocator(pindexBest));
+#endif
+    }
+#ifdef ENABLE_WALLET
+    if (pwalletMain)
+        bitdb.Flush(true);
+#endif
+    boost::filesystem::remove(GetPidFile());
+    UnregisterAllWallets();
+#ifdef ENABLE_WALLET
+    delete pwalletMain;
+    pwalletMain = NULL;
+#endif
+    //globalVerifyHandle.reset();
+    //ECC_Stop();
+    LogPrintf("Shutdown : done\n");
+}
+
 void Shutdown()
 {
 	fRequestShutdown = true; // Needed when we shutdown the wallet

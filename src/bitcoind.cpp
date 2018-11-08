@@ -111,6 +111,14 @@ bool AppInit(int argc, char* argv[])
         PrintException(NULL, "AppInit()");
     }
 
+#if !WIN32
+        if (NeedToRestart)
+        {
+                Restart();
+                return true;
+        }
+#endif
+
     if (!fRet)
     {
         threadGroup.interrupt_all();
@@ -136,10 +144,12 @@ int main(int argc, char* argv[])
 
     fRet = AppInit(argc, argv);
 
-    if (NeedToRestart) {
-        fprintf(stdout, "\n************************\nRestart requested 3\n");
-    }
-
+#if !WIN32
+        if (NeedToRestart)
+        {
+                fprintf(stdout, "Restarting app\n");
+        }
+#endif
     if (fRet && fDaemon)
         return 0;
 
