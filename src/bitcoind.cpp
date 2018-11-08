@@ -25,6 +25,23 @@ void WaitForShutdown(boost::thread_group* threadGroup)
     }
 }
 
+bool WaitForRestart(boost::thread_group* threadGroup)
+{
+    bool fRestart = RestartRequested();
+    // Tell the main threads to shutdown.
+    while (!fRestart)
+    {
+        MilliSleep(200);
+        fRestart = RestartRequested();
+    }
+    if (threadGroup)
+    {
+        threadGroup->interrupt_all();
+        threadGroup->join_all();
+    }
+    return true;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Start
@@ -111,14 +128,6 @@ bool AppInit(int argc, char* argv[])
         PrintException(NULL, "AppInit()");
     }
 
-#if !WIN32
-        if (NeedToRestart)
-        {
-                Restart();
-                return true;
-        }
-#endif
-
     if (!fRet)
     {
         threadGroup.interrupt_all();
@@ -144,12 +153,11 @@ int main(int argc, char* argv[])
 
     fRet = AppInit(argc, argv);
 
-#if !WIN32
-        if (NeedToRestart)
-        {
-                fprintf(stdout, "Restarting app\n");
-        }
-#endif
+    if (RestartRequested()) {
+
+
+    }
+
     if (fRet && fDaemon)
         return 0;
 
