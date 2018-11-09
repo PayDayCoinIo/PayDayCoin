@@ -2543,8 +2543,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                 if (pindex->GetBlockHash() == hashPrevBlock) {
 
 					// If we don't already have its previous block, skip masternode payment step
-                    CAmount masternodePaymentAmount; // = GetMasternodePayment(pindex->nHeight+1, nReward);
-                    CAmount rewardPaymentAmount;
+                    CAmount masternodePaymentAmount = 0; // = GetMasternodePayment(pindex->nHeight+1, nReward);
+                    CAmount rewardPaymentAmount = 0;
 
                     bool foundMasternodeAmount = false;
                     bool foundRewardAmount = false;
