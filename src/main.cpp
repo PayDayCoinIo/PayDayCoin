@@ -2564,15 +2564,11 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                         }
                         else
                         {
-                            foundMasternodeAmount = true; //doesn't require a specific payee
+                            foundMasternodeAmount = true;
                             foundRewardAmount = true;
 
                             if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindex->nHeight + 1);
                         }
-                    }
-                    else
-                    {
-                        LogPrintf("CheckBlock(): GetBlockPayee\n");
                     }
 
 					for (unsigned int i = 0; i < vtx[1].vout.size(); i++) {
@@ -2607,15 +2603,9 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
                     if (!foundMasternodeAmount || !foundRewardAmount) {
                         LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
-                        //tmpMapBlockIndex.insert(make_pair(GetHash(),pindex));
-                        //WaitBlocks = true;
-                        //hashStopBlock = GetHash();
                         return DoS(100, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
 					}
 					else {
-
-                        //hashStopBlock = 0;
-                        //WaitBlocks = false;
                         LogPrintf("CheckBlock(): Found masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
 					}
 				}
