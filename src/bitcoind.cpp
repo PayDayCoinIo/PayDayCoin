@@ -8,6 +8,24 @@
 #include "init.h"
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <iostream>
+
+//#define BOOST_FILESYSTEM_VERSION 2
+#include <boost/process.hpp>
+#include <string>
+#include <vector>
+
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+
+#include <boost/filesystem.hpp>
+
+#define MTX_NAME    "pdd_onair_restart"
+
+namespace bp = ::boost::process;
 
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
@@ -25,21 +43,42 @@ void WaitForShutdown(boost::thread_group* threadGroup)
     }
 }
 
-bool WaitForRestart(boost::thread_group* threadGroup)
+bool doRestart(int argc,char *argv[])
 {
-    bool fRestart = RestartRequested();
-    // Tell the main threads to shutdown.
-    while (!fRestart)
-    {
-        MilliSleep(200);
-        fRestart = RestartRequested();
-    }
-    if (threadGroup)
-    {
-        threadGroup->interrupt_all();
-        threadGroup->join_all();
-    }
+    if (argc == 0)
+        return false;
+
+    std::string selfPath(argv[0]);
+
+    std::vector<std::string> selfArgs;
+    for (int i = 0; i < argc; i++)
+        selfArgs.push_back(argv[i]);
+
+    bp::context ctx;
+
+    bp::child chProc = bp::launch(selfPath, selfArgs, ctx);
+
+    std::cout << "Child is Running: " << chProc.get_id() << std::endl;
+
     return true;
+}
+
+bool checkRestart()
+{
+    bool rv = false;
+    try
+    {
+        boost::interprocess::named_mutex g_mtx(boost::interprocess::open_only, MTX_NAME);
+        rv = g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 5 });
+        boost::interprocess::named_mutex::remove(MTX_NAME);
+    }
+    catch (const boost::interprocess::interprocess_exception &ex)
+    {
+        std::cout << "Lock Exception: " << ex.what() << std::endl;
+    }
+
+    return rv;
+
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -96,7 +135,10 @@ bool AppInit(int argc, char* argv[])
             int ret = CommandLineRPC(argc, argv);
             exit(ret);
         }
+
+
 #if !WIN32
+
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
@@ -120,7 +162,15 @@ bool AppInit(int argc, char* argv[])
         }
 #endif
 
-        fRet = AppInit2(threadGroup);
+
+            fRet = AppInit2(threadGroup);
+            std::cout << "starting Process: " << bp::self::get_instance().get_id() << std::endl;
+            {
+                boost::interprocess::named_mutex::remove(MTX_NAME);
+                boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
+                boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(g_mtx);
+            }
+
     }
     catch (std::exception& e) {
         PrintException(&e, "AppInit()");
@@ -155,7 +205,12 @@ int main(int argc, char* argv[])
 
     if (RestartRequested()) {
 
+        bool rv = doRestart(argc, argv);
+        std::cout << "doRestart: " << rv << std::endl;
 
+        rv = checkRestart();
+        std::cout << "checkRestart: " << rv << std::endl;
+        std::cout << std::endl << "The End!!!" << std::endl << std::endl;
     }
 
     if (fRet && fDaemon)
