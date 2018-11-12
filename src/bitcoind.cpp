@@ -164,16 +164,8 @@ bool AppInit(int argc, char* argv[])
         }
 #endif
 
-        std::cout << "starting Process: " << bp::self::get_instance().get_id() << std::endl;
-        {
-            boost::interprocess::named_mutex::remove(MTX_NAME);
-            boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
-            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(g_mtx);
-        }
         fRet = AppInit2(threadGroup);
 
-        bool rv = checkRestart();
-        std::cout << "1 checkRestart: " << rv << std::endl;
     }
     catch (std::exception& e) {
         PrintException(&e, "AppInit()");
@@ -202,7 +194,9 @@ int main(int argc, char* argv[])
     bool fRet = false;
 
     bool rv = checkRestart();
-    std::cout << "0 checkRestart: " << rv << std::endl;
+    while (rv) {
+        MilliSleep(500);
+    }
 
     // Connect bitcoind signal handlers
     noui_connect();
@@ -212,13 +206,16 @@ int main(int argc, char* argv[])
 
     if (RestartRequested()) {
 
+        std::cout << "starting Process: " << bp::self::get_instance().get_id() << std::endl;
+        {
+            boost::interprocess::named_mutex::remove(MTX_NAME);
+            boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
+            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(g_mtx);
+        }
+
         rv = doRestart(argc, argv);
         std::cout << "doRestart: " << rv << std::endl;
 
-
-        rv = checkRestart();
-        std::cout << "3 checkRestart: " << rv << std::endl;
-        std::cout << std::endl << "The End!!!" << std::endl << std::endl;
     }
 
     if (fRet && fDaemon)
