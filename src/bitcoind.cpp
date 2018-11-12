@@ -209,8 +209,8 @@ int main(int argc, char* argv[])
 
     fRet = AppInit(argc, argv);
 
-    //if (RestartRequested()) {
-    if (!rv) {
+
+    if (RestartRequested()) {
 
         rv = doRestart(argc, argv);
         std::cout << "doRestart: " << rv << std::endl;
