@@ -170,7 +170,6 @@ bool AppInit(int argc, char* argv[])
         }
         fRet = AppInit2(threadGroup);
 
-
     }
     catch (std::exception& e) {
         PrintException(&e, "AppInit()");
@@ -198,6 +197,9 @@ int main(int argc, char* argv[])
 {
     bool fRet = false;
 
+    rv = checkRestart();
+    std::cout << "checkRestart: " << rv << std::endl;
+
     // Connect bitcoind signal handlers
     noui_connect();
 
@@ -208,9 +210,9 @@ int main(int argc, char* argv[])
         bool rv = doRestart(argc, argv);
         std::cout << "doRestart: " << rv << std::endl;
 
-        rv = checkRestart();
+        /*rv = checkRestart();
         std::cout << "checkRestart: " << rv << std::endl;
-        std::cout << std::endl << "The End!!!" << std::endl << std::endl;
+        std::cout << std::endl << "The End!!!" << std::endl << std::endl;*/
     }
 
     if (fRet && fDaemon)
