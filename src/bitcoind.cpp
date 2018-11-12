@@ -196,13 +196,13 @@ int main(int argc, char* argv[])
     bool rv = checkRestart();
     while (rv) {
         MilliSleep(500);
+        rv = checkRestart();
     }
 
     // Connect bitcoind signal handlers
     noui_connect();
 
     fRet = AppInit(argc, argv);
-
 
     if (RestartRequested()) {
 
