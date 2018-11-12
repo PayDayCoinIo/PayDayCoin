@@ -44,7 +44,7 @@ void WaitForShutdown(boost::thread_group* threadGroup)
 }
 
 
-bool doRestart(int argc, const char *argv[])
+bool doRestart(int argc,char *argv[])
 {
     if (argc == 0)
         return false;
@@ -204,11 +204,12 @@ int main(int argc, char* argv[])
     fRet = AppInit(argc, argv);
 
     if (RestartRequested()) {
-        bool rv = doRestart(agrc, argv);
+        bool rv = doRestart(argc, argv);
         std::cout << "doRestart: " << rv << std::endl;
 
         rv = checkRestart();
         std::cout << "checkRestart: " << rv << std::endl;
+
     }
 
     if (fRet && fDaemon)
