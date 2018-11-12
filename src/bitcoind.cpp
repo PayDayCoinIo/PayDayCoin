@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 {
     bool fRet = false;
 
-    rv = checkRestart();
+    bool rv = checkRestart();
     std::cout << "checkRestart: " << rv << std::endl;
 
     // Connect bitcoind signal handlers
@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
 
     if (RestartRequested()) {
 
-        bool rv = doRestart(argc, argv);
+        rv = doRestart(argc, argv);
         std::cout << "doRestart: " << rv << std::endl;
 
         /*rv = checkRestart();
