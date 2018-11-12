@@ -209,6 +209,16 @@ Value stop(const Array& params, bool fHelp)
     return "PayDay server stopping";
 }
 
+Value hardrestart(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "hardrestart\n"
+            "Hard Restart PayDay server.");
+
+   StartRestart();
+   return "Hard Restart";
+}
 
 
 //
@@ -330,6 +340,7 @@ static const CRPCCommand vRPCCommands[] =
     { "smsginbox",              &smsginbox,              false,     false,     false },
     { "smsgoutbox",             &smsgoutbox,             false,     false,     false },
     { "smsgbuckets",            &smsgbuckets,            false,     false,     false },
+    { "hardrestart",            &hardrestart,            false,     false,     false },
 #endif
 };
 

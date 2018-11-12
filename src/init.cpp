@@ -92,14 +92,26 @@ bool fOnlyTor = false;
 //
 
 volatile bool fRequestShutdown = false;
+volatile bool fRequestRestart = false;
 
 void StartShutdown()
 {
     fRequestShutdown = true;
 }
+
+void StartRestart()
+{
+    fRequestRestart = true;
+}
+
 bool ShutdownRequested()
 {
     return fRequestShutdown;
+}
+
+bool RestartRequested()
+{
+    return fRequestRestart;
 }
 
 static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;

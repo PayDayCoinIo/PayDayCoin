@@ -13,7 +13,11 @@ namespace boost {
 
 extern CWallet* pwalletMain;
 void StartShutdown();
+void StartRestart();
+
 bool ShutdownRequested();
+bool RestartRequested();
+
 void Shutdown();
 bool AppInit2(boost::thread_group& threadGroup);
 std::string HelpMessage();

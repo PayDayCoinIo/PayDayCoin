@@ -27,7 +27,6 @@
 
 namespace bp = ::boost::process;
 
-
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
     bool fShutdown = ShutdownRequested();
@@ -42,6 +41,45 @@ void WaitForShutdown(boost::thread_group* threadGroup)
         threadGroup->interrupt_all();
         threadGroup->join_all();
     }
+}
+
+
+bool doRestart(int argc, const char *argv[])
+{
+    if (argc == 0)
+        return false;
+
+    std::string selfPath(argv[0]);
+
+    std::vector<std::string> selfArgs;
+    for (int i = 0; i < argc; i++)
+        selfArgs.push_back(argv[i]);
+
+    bp::context ctx;
+
+    bp::child chProc = bp::launch(selfPath, selfArgs, ctx);
+
+    std::cout << "Child is Running: " << chProc.get_id() << std::endl;
+
+    return true;
+}
+
+
+bool checkRestart()
+{
+    bool rv = false;
+    try
+    {
+        boost::interprocess::named_mutex g_mtx(boost::interprocess::open_only, MTX_NAME);
+        rv = g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 5 });
+        boost::interprocess::named_mutex::remove(MTX_NAME);
+    }
+    catch (const boost::interprocess::interprocess_exception &ex)
+    {
+        std::cout << "Lock Exception: " << ex.what() << std::endl;
+    }
+
+    return rv;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -155,6 +193,7 @@ bool AppInit(int argc, char* argv[])
 }
 
 extern void noui_connect();
+
 int main(int argc, char* argv[])
 {
     bool fRet = false;
@@ -163,6 +202,14 @@ int main(int argc, char* argv[])
     noui_connect();
 
     fRet = AppInit(argc, argv);
+
+    if (RestartRequested()) {
+        bool rv = doRestart(agrc, argv);
+        std::cout << "doRestart: " << rv << std::endl;
+
+        rv = checkRestart();
+        std::cout << "checkRestart: " << rv << std::endl;
+    }
 
     if (fRet && fDaemon)
         return 0;
