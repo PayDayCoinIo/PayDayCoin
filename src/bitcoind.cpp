@@ -26,9 +26,11 @@
 #define MTX_NAME    "pdd_onair_restart"
 
 namespace bp = ::boost::process;
+bool checkRestart();
 
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
+
     bool fShutdown = ShutdownRequested();
     // Tell the main threads to shutdown.
     while (!fShutdown)
@@ -170,6 +172,8 @@ bool AppInit(int argc, char* argv[])
         }
         fRet = AppInit2(threadGroup);
 
+        bool rv = checkRestart();
+        std::cout << "1 checkRestart: " << rv << std::endl;
     }
     catch (std::exception& e) {
         PrintException(&e, "AppInit()");
@@ -198,21 +202,23 @@ int main(int argc, char* argv[])
     bool fRet = false;
 
     bool rv = checkRestart();
-    std::cout << "checkRestart: " << rv << std::endl;
+    std::cout << "0 checkRestart: " << rv << std::endl;
 
     // Connect bitcoind signal handlers
     noui_connect();
 
     fRet = AppInit(argc, argv);
 
-    if (RestartRequested()) {
+    //if (RestartRequested()) {
+    if (!rv) {
 
         rv = doRestart(argc, argv);
         std::cout << "doRestart: " << rv << std::endl;
 
-        /*rv = checkRestart();
-        std::cout << "checkRestart: " << rv << std::endl;
-        std::cout << std::endl << "The End!!!" << std::endl << std::endl;*/
+
+        rv = checkRestart();
+        std::cout << "3 checkRestart: " << rv << std::endl;
+        std::cout << std::endl << "The End!!!" << std::endl << std::endl;
     }
 
     if (fRet && fDaemon)
