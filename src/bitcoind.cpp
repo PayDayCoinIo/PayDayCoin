@@ -8,6 +8,25 @@
 #include "init.h"
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <iostream>
+
+//#define BOOST_FILESYSTEM_VERSION 2
+#include <boost/process.hpp>
+#include <string>
+#include <vector>
+
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+
+#include <boost/filesystem.hpp>
+
+#define MTX_NAME    "pdd_onair_restart"
+
+namespace bp = ::boost::process;
+
 
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
@@ -79,7 +98,10 @@ bool AppInit(int argc, char* argv[])
             int ret = CommandLineRPC(argc, argv);
             exit(ret);
         }
+
+
 #if !WIN32
+
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
@@ -104,6 +126,13 @@ bool AppInit(int argc, char* argv[])
 #endif
 
 		fRet = AppInit2(threadGroup);
+                std::cout << "starting Process: " << bp::self::get_instance().get_id() << std::endl;
+                {
+                    boost::interprocess::named_mutex::remove(MTX_NAME);
+                    boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
+                    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(g_mtx);
+                }
+
     }
     catch (std::exception& e) {
         PrintException(&e, "AppInit()");
