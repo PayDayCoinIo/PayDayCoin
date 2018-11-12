@@ -217,6 +217,7 @@ Value hardrestart(const Array& params, bool fHelp)
             "Hard Restart PayDay server.");
 
    StartRestart();
+   StartShutdown();
    return "Hard Restart";
 }
 
