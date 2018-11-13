@@ -211,13 +211,15 @@ Value stop(const Array& params, bool fHelp)
 
 Value hardrestart(const Array& params, bool fHelp)
 {
-   //StartShutdown();
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "hardrestart\n"
+            "Hard Restart PayDay server.");
+
    StartRestart();
+   StartShutdown();
    return "Hard Restart";
 }
-
-
-
 
 //
 // Call Table

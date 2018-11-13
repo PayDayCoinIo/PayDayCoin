@@ -4419,9 +4419,10 @@ bool ProcessMessages(CNode* pfrom)
                 LogPrintf("CheckBlockChain at %s\n", nTimeLastCheckAcception);
                 if (nBestHeight - nLastCheckBlockHeight < 1) {
                     LogPrintf("CheckBlockChain: Detect Sync Problem, try restart\n");
-                    NeedToReload = true;
+                    //NeedToReload = true;
                     //PushGetBlocks(pfrom, pindexBest, uint256(0));
-
+                    StartRestart();
+                    StartShutdown();
                 }
                 nLastCheckBlockHeight = nBestHeight;
             }
