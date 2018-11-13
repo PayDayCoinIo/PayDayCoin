@@ -11,7 +11,8 @@ fi
 if [ $(whoami) = "root" ]; then
         which sudo > /dev/null 2>&1
         if [ $? != 0 ]; then
-		apt-get -y update ; apt-get -y upgrade
+		apt-get -y update
+		apt-get -y upgrade
 		apt-get install -y sudo
         fi
 fi
@@ -31,6 +32,8 @@ sudo chmod 0600 /var/swap.img
 sudo chown root:root /var/swap.img
 
 fi
+
+sudo tar zxvf files/boost-process.tar.gz -C /usr/include/boost/
 
 chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  make -f makefile.unix USE_UPNP=
 strip PayDayd
