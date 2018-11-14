@@ -60,7 +60,6 @@ int checkRestart()
 
                 if( g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 40 }))
                 {
-
                         g_mtx.unlock();
                         boost::interprocess::named_mutex::remove(MTX_NAME);
                         rv=0;
@@ -94,7 +93,7 @@ bool doRestart(int argc, char *argv[])
     ctx.environment = bp::self::get_environment();
     bp::child chProc = bp::launch(selfPath, selfArgs, ctx);
 
-    MilliSleep(20000);
+    MilliSleep(1000);
     g_mtx.unlock();
 
     return true;
@@ -215,7 +214,7 @@ int main(int argc, char* argv[])
 
     int rv = checkRestart();
     while (rv == 0){
-            MilliSleep(20000);
+            MilliSleep(1000);
             rv = checkRestart();
     }
 
