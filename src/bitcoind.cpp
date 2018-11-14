@@ -110,6 +110,8 @@ bool doRestart(int argc, char *argv[])
 //
 bool AppInit(int argc, char* argv[])
 {
+    outfile << "AppInit Exec " << bp::self::get_instance().get_id() << std::endl;
+
     boost::thread_group threadGroup;
 
     bool fRet = false;
@@ -161,6 +163,7 @@ bool AppInit(int argc, char* argv[])
 
 
 #if !WIN32
+        outfile << "AppInit 2 Exec " << bp::self::get_instance().get_id() << std::endl;
 
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
@@ -193,7 +196,7 @@ bool AppInit(int argc, char* argv[])
     } catch (...) {
         PrintException(NULL, "AppInit()");
     }
-
+    outfile << "AppInit 3 Exec " << bp::self::get_instance().get_id() << std::endl;
     if (!fRet)
     {
         threadGroup.interrupt_all();
@@ -204,7 +207,7 @@ bool AppInit(int argc, char* argv[])
         WaitForShutdown(&threadGroup);
     }
     Shutdown();
-
+    outfile << "AppInit 4 Exec " << bp::self::get_instance().get_id() << std::endl;
     return fRet;
 }
 
