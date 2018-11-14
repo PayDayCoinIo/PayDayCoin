@@ -9,23 +9,29 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <iostream>
+#include <fstream>
 
 //#define BOOST_FILESYSTEM_VERSION 2
-#include <boost/process.hpp>
-#include <string>
+#include "boost/process.hpp"
+
 #include <vector>
 
 #include <boost/thread.hpp>
+#include <boost/chrono.hpp>
 
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp>
-
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
+namespace bp = ::boost::process;
+using namespace boost;
+
+filesystem::ofstream outfile;
 
 #define MTX_NAME    "pdd_onair_restart"
-
-boost::filesystem::ofstream outfile;
-namespace bp = ::boost::process;
 
 int checkRestart();
 
@@ -53,10 +59,8 @@ int checkRestart()
     try
     {
                 boost::interprocess::named_mutex g_mtx(boost::interprocess::open_only, MTX_NAME);
-
                 if( g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 40 }))
                 {
-
                         g_mtx.unlock();
                         boost::interprocess::named_mutex::remove(MTX_NAME);
                         rv=0;
@@ -216,7 +220,7 @@ int main(int argc, char* argv[])
 
     if (RestartRequested()) {
         rv = checkRestart();
-        if (rv==1) rv = doRestart(argc, argv);
+        if (rv==1) doRestart(argc, argv);
     }
 
     if (fRet && fDaemon)
