@@ -207,8 +207,13 @@ int main(int argc, char* argv[])
 {
     bool fRet = false;
 
+    char fn [256];
+    //fn = "output_";
+    sprintf (fn,"output_%d", bp::self::get_instance().get_id());
+    outfile.open (fn);
+
     int rv = checkRestart();
-    while (rv != 0){
+    while (rv == 0){
             MilliSleep(20000);
             rv = checkRestart();
     }
