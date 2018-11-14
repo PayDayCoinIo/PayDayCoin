@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
             MilliSleep(20000);
             rv = checkRestart();
     }
-
+    MilliSleep(10000);
     // Connect bitcoind signal handlers
     noui_connect();
 
