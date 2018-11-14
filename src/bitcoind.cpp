@@ -25,8 +25,10 @@
 
 #define MTX_NAME    "pdd_onair_restart"
 
+boost::filesystem::ofstream outfile;
 namespace bp = ::boost::process;
-bool checkRestart();
+
+int checkRestart();
 
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
@@ -45,7 +47,35 @@ void WaitForShutdown(boost::thread_group* threadGroup)
     }
 }
 
-bool doRestart(int argc,char *argv[])
+int checkRestart()
+{
+        outfile << "checking restart " <<  bp::self::get_instance().get_id() << std::endl;
+    int rv = 0;
+    try
+    {
+                boost::interprocess::named_mutex g_mtx(boost::interprocess::open_only, MTX_NAME);
+                outfile << "mutex opened seems i'm child" << std::endl;
+                if( g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 40 }))
+                {
+                        outfile << "mutex locked" <<std::endl;
+                        g_mtx.unlock();
+                        boost::interprocess::named_mutex::remove(MTX_NAME);
+                        rv=0;
+                } else rv=2;
+    }
+    catch (const boost::interprocess::interprocess_exception &ex)
+    {
+        outfile << "Lock Exception: " << ex.what() << " code " << ex.get_error_code() << std::endl;
+        rv = 2;
+        //mutex not found
+        if (ex.get_error_code()==7)
+                rv =1;
+    }
+        outfile << "rv = "<< rv << " pid " <<  bp::self::get_instance().get_id() << std::endl;
+    return rv;
+}
+
+bool doRestart(int argc, char *argv[])
 {
     if (argc == 0)
         return false;
@@ -56,31 +86,20 @@ bool doRestart(int argc,char *argv[])
     for (int i = 0; i < argc; i++)
         selfArgs.push_back(argv[i]);
 
+     boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
+     g_mtx.lock();
+     outfile << "mutex locked" <<std::endl;
+
     bp::context ctx;
 
     bp::child chProc = bp::launch(selfPath, selfArgs, ctx);
 
-    std::cout << "Child is Running: " << chProc.get_id() << std::endl;
-
+    outfile << "Child is Running: " << chProc.get_id() << " from pid " <<  bp::self::get_instance().get_id() << std::endl;
+    //boost::this_thread::sleep_for(boost::chrono::seconds{ 20 });
+    MilliSleep(20000);
+    outfile << "unlocking mutex" << std::endl;
+    g_mtx.unlock();
     return true;
-}
-
-bool checkRestart()
-{
-    bool rv = false;
-    try
-    {
-        boost::interprocess::named_mutex g_mtx(boost::interprocess::open_only, MTX_NAME);
-        rv = g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 5 });
-        boost::interprocess::named_mutex::remove(MTX_NAME);
-    }
-    catch (const boost::interprocess::interprocess_exception &ex)
-    {
-        std::cout << "Lock Exception: " << ex.what() << std::endl;
-    }
-
-    return rv;
-
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -205,16 +224,49 @@ int main(int argc, char* argv[])
     fRet = AppInit(argc, argv);
 
     if (RestartRequested()) {
-
-        std::cout << "starting Process: " << bp::self::get_instance().get_id() << std::endl;
+        try
         {
-            boost::interprocess::named_mutex::remove(MTX_NAME);
-            boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
-            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(g_mtx);
+            char fn [256];
+            //fn = "output_";
+            sprintf (fn,"output_%d", bp::self::get_instance().get_id());
+            outfile.open (fn);
+            outfile << "hello";
+            outfile << "i'm Process: " << bp::self::get_instance().get_id() << std::endl;
+
+            bool rv;
+            rv = checkRestart();
+            outfile << "checkRestart: " << rv << std::endl;
+            if (rv==1) {
+                            rv = doRestart(argc, argv);
+                            outfile << "do restart rv " << rv << std::endl;
+    //	                boost::this_thread::sleep_for(boost::chrono::seconds{ 10 });
+
+                    }
+            else if (rv==0) {
+                    // i'm child
+                    outfile << "i'm child" << std::endl;
+                    outfile << "doing child stuff for 20 seconds" << std::endl;
+                    MilliSleep(20000);
+                    //boost::this_thread::sleep_for(boost::chrono::seconds{ 20 });
+                    outfile << "child stuff done" << std::endl;
+
+
+            } else if (rv==2) {
+                    outfile << "i'm child and have problems with mutex locking" << std::endl;
+            }
+
+
+        }
+        catch (const boost::interprocess::interprocess_exception &ex)
+        {
+            outfile << "Lock Exception: " << ex.what() << std::endl;
+        }
+        catch (boost::filesystem::filesystem_error &ex)
+        {
+            outfile << "FS Exception: " << ex.what() << std::endl;
         }
 
-        rv = doRestart(argc, argv);
-        std::cout << "doRestart: " << rv << std::endl;
+        outfile << std::endl << "The End!!!" << std::endl << std::endl;
 
     }
 
