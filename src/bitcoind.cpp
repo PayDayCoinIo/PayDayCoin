@@ -192,10 +192,10 @@ bool AppInit(int argc, char* argv[])
 
     }
     catch (std::exception& e) {
-        outfile << "AppInit catch 1 " << bp::self::get_instance().get_id() << std::endl;
+        outfile << "AppInit catch 1 " << bp::self::get_instance().get_id() << " Err: " << e.what() << std::endl;
         PrintException(&e, "AppInit()");
     } catch (...) {
-        outfile << "AppInit catch 2 " << bp::self::get_instance().get_id() << std::endl;
+        outfile << "AppInit catch 2 " << bp::self::get_instance().get_id() << " Err: " << e.what() << std::endl;
         PrintException(NULL, "AppInit()");
     }
     outfile << "AppInit 3 Exec " << bp::self::get_instance().get_id() << std::endl;
