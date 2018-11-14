@@ -16,7 +16,6 @@
 #include <vector>
 
 #include <boost/thread.hpp>
-#include <boost/chrono.hpp>
 
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp>
