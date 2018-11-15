@@ -54,12 +54,11 @@ void WaitForShutdown(boost::thread_group* threadGroup)
 
 int checkRestart()
 {
-    outfile << "checking restart from " <<  bp::self::get_instance().get_id() << std::endl;
     int rv = 0;
     try
     {
                 boost::interprocess::named_mutex g_mtx(boost::interprocess::open_only, MTX_NAME);
-                outfile << "mutex opened seems i'm child" << std::endl;
+
                 if( g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 40 }))
                 {
                         outfile << "mutex locked" <<std::endl;
@@ -74,7 +73,7 @@ int checkRestart()
         if (ex.get_error_code()==7)
                 rv =1;
     }
-    outfile << "rv = "<< rv << " pid " <<  bp::self::get_instance().get_id() << std::endl;
+
     return rv;
 }
 
@@ -93,28 +92,25 @@ bool doRestart(int argc, char *argv[])
 
       boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
       g_mtx.lock();
-     outfile << "mutex locked" <<std::endl;
 
      bp::context ctx;
      ctx.environment = bp::self::get_environment();
      std::size_t found1 = selfPath.find_first_of(".");
-     std::size_t found2 = selfPath.find_first_of("/");
-     if (found1==1) {
+     std::size_t found2 = selfPath.find_first_of("/\\");
+
+     if (found1!=std::string::npos) {
          path = selfPath;
      }
-     else if (found2==1) {
+     else if (found2!=std::string::npos) {
          path = selfPath;
      }
      else {
          path = bp::find_executable_in_path(selfPath);
      }
-
      bp::child chProc = bp::launch(path, selfArgs, ctx);
-     outfile << "Child is Running: " << chProc.get_id() << " from pid " <<  bp::self::get_instance().get_id() << std::endl;
 
-     MilliSleep(2000);
+     MilliSleep(1000);
      g_mtx.unlock();
-     outfile << "unlocking mutex" << std::endl;
      return true;
 
 }
@@ -125,8 +121,6 @@ bool doRestart(int argc, char *argv[])
 //
 bool AppInit(int argc, char* argv[])
 {
-    outfile << "AppInit Exec " << bp::self::get_instance().get_id() << std::endl;
-
     boost::thread_group threadGroup;
 
     bool fRet = false;
@@ -178,8 +172,6 @@ bool AppInit(int argc, char* argv[])
 
 
 #if !WIN32
-        outfile << "AppInit 2 Exec " << bp::self::get_instance().get_id() << std::endl;
-
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
@@ -207,13 +199,11 @@ bool AppInit(int argc, char* argv[])
 
     }
     catch (std::exception& e) {
-        outfile << "AppInit catch 1 " << bp::self::get_instance().get_id() << " Err: " << e.what() << std::endl;
         PrintException(&e, "AppInit()");
     } catch (...) {
-        outfile << "AppInit catch 2 " << bp::self::get_instance().get_id() << std::endl;
         PrintException(NULL, "AppInit()");
     }
-    outfile << "AppInit 3 Exec " << bp::self::get_instance().get_id() << std::endl;
+
     if (!fRet)
     {
         threadGroup.interrupt_all();
@@ -224,7 +214,7 @@ bool AppInit(int argc, char* argv[])
         WaitForShutdown(&threadGroup);
     }
     Shutdown();
-    outfile << "AppInit 4 Exec " << bp::self::get_instance().get_id() << std::endl;
+
     return fRet;
 }
 
@@ -234,16 +224,9 @@ int main(int argc, char* argv[])
 {
     bool fRet = false;
 
-    char fn [256];
-    //fn = "output_";
-    sprintf (fn,"output_%d", bp::self::get_instance().get_id());
-    outfile.open (fn);
-    outfile << "hello" << std::endl;
-    outfile << "i'm Process: " << bp::self::get_instance().get_id() << std::endl;
-
     int rv = checkRestart();
     while (rv == 0){
-            MilliSleep(2000);
+            MilliSleep(500);
             rv = checkRestart();
     }
 
@@ -256,8 +239,7 @@ int main(int argc, char* argv[])
         rv = checkRestart();
         if (rv==1) doRestart(argc, argv);
     }
-    outfile << std::endl << "PATH ENV: " << getenv("PATH") << std::endl << std::endl;
-    outfile << std::endl << "The End!!!" << std::endl << std::endl;
+
     if (fRet && fDaemon)
         return 0;
 
