@@ -83,7 +83,8 @@ bool doRestart(int argc, char *argv[])
     if (argc == 0)
          return false;
 
-     std::string path(argv[0]);
+    std::string selfPath(argv[0]);
+    std::string path;
 
      std::vector<std::string> selfArgs;
 
@@ -96,9 +97,17 @@ bool doRestart(int argc, char *argv[])
 
      bp::context ctx;
      ctx.environment = bp::self::get_environment();
-     std::size_t found = path.find(".");
-
-     if (found==std::string::npos) path = bp::find_executable_in_path(argv[0]);
+     std::size_t found1 = selfPath.find_first_of(".");
+     std::size_t found2 = selfPath.find_first_of("/");
+     if (found1==1) {
+         path = selfPath;
+     }
+     else if (found2==1) {
+         path = selfPath;
+     }
+     else {
+         path = bp::find_executable_in_path(selfPath);
+     }
 
      bp::child chProc = bp::launch(path, selfArgs, ctx);
      outfile << "Child is Running: " << chProc.get_id() << " from pid " <<  bp::self::get_instance().get_id() << std::endl;
