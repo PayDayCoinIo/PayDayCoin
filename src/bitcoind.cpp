@@ -95,6 +95,7 @@ bool doRestart(int argc, char *argv[])
 
     bp::context ctx;
     ctx.environment = bp::self::get_environment();
+
     bp::child chProc = bp::launch(selfPath, selfArgs, ctx);
     outfile << "Child is Running: " << chProc.get_id() << " from pid " <<  bp::self::get_instance().get_id() << std::endl;
 
@@ -241,6 +242,7 @@ int main(int argc, char* argv[])
         rv = checkRestart();
         if (rv==1) doRestart(argc, argv);
     }
+    outfile << std::endl << "PATH ENV: " << getenv("PATH") << std::endl << std::endl;
     outfile << std::endl << "The End!!!" << std::endl << std::endl;
     if (fRet && fDaemon)
         return 0;
