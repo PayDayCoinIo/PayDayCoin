@@ -81,28 +81,33 @@ int checkRestart()
 bool doRestart(int argc, char *argv[])
 {
     if (argc == 0)
-        return false;
+         return false;
 
-    std::string selfPath(argv[0]);
+     std::string path(argv[0]);
 
-    std::vector<std::string> selfArgs;
-    for (int i = 0; i < argc; i++)
-        selfArgs.push_back(argv[i]);
+     std::vector<std::string> selfArgs;
 
-     boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
-     g_mtx.lock();
-    outfile << "mutex locked" <<std::endl;
+     for (int i = 0; i < argc; i++)
+         selfArgs.push_back(argv[i]);
 
-    bp::context ctx;
-    ctx.environment = bp::self::get_environment();
+      boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
+      g_mtx.lock();
+     outfile << "mutex locked" <<std::endl;
 
-    bp::child chProc = bp::launch(selfPath, selfArgs, ctx);
-    outfile << "Child is Running: " << chProc.get_id() << " from pid " <<  bp::self::get_instance().get_id() << std::endl;
+     bp::context ctx;
+     ctx.environment = bp::self::get_environment();
+     std::size_t found = path.find(".");
 
-    MilliSleep(2000);
-    g_mtx.unlock();
-    outfile << "unlocking mutex" << std::endl;
-    return true;
+     if (found==std::string::npos) path = bp::find_executable_in_path(argv[0]);
+
+     bp::child chProc = bp::launch(path, selfArgs, ctx);
+     outfile << "Child is Running: " << chProc.get_id() << " from pid " <<  bp::self::get_instance().get_id() << std::endl;
+
+     MilliSleep(2000);
+     g_mtx.unlock();
+     outfile << "unlocking mutex" << std::endl;
+     return true;
+
 }
 
 //////////////////////////////////////////////////////////////////////////////
