@@ -8,36 +8,8 @@
 #include "init.h"
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <iostream>
-#include <fstream>
-
-//#define BOOST_FILESYSTEM_VERSION 2
-#include "boost/process.hpp"
-
-#include <vector>
-
-#include <boost/thread.hpp>
-#include <boost/chrono.hpp>
-
-#include <boost/interprocess/sync/scoped_lock.hpp>
-#include <boost/interprocess/sync/named_mutex.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
-
-namespace bp = ::boost::process;
-using namespace boost;
-
-filesystem::ofstream outfile;
-
-#define MTX_NAME    "pdd_onair_restart"
-
-int checkRestart();
-
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
-
     bool fShutdown = ShutdownRequested();
     // Tell the main threads to shutdown.
     while (!fShutdown)
@@ -50,69 +22,6 @@ void WaitForShutdown(boost::thread_group* threadGroup)
         threadGroup->interrupt_all();
         threadGroup->join_all();
     }
-}
-
-int checkRestart()
-{
-    int rv = 0;
-    try
-    {
-                boost::interprocess::named_mutex g_mtx(boost::interprocess::open_only, MTX_NAME);
-
-                if( g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 40 }))
-                {
-                        outfile << "mutex locked" <<std::endl;
-                        g_mtx.unlock();
-                        boost::interprocess::named_mutex::remove(MTX_NAME);
-                        rv=0;
-                } else rv=2;
-    }
-    catch (const boost::interprocess::interprocess_exception &ex)
-    {
-        rv = 2;
-        if (ex.get_error_code()==7)
-                rv =1;
-    }
-
-    return rv;
-}
-
-bool doRestart(int argc, char *argv[])
-{
-    if (argc == 0)
-         return false;
-
-    std::string selfPath(argv[0]);
-    std::string path;
-
-     std::vector<std::string> selfArgs;
-
-     for (int i = 0; i < argc; i++)
-         selfArgs.push_back(argv[i]);
-
-      boost::interprocess::named_mutex g_mtx(boost::interprocess::create_only, MTX_NAME);
-      g_mtx.lock();
-
-     bp::context ctx;
-     ctx.environment = bp::self::get_environment();
-     std::size_t found1 = selfPath.find_first_of(".");
-     std::size_t found2 = selfPath.find_first_of("/\\");
-
-     if (found1!=std::string::npos) {
-         path = selfPath;
-     }
-     else if (found2!=std::string::npos) {
-         path = selfPath;
-     }
-     else {
-         path = bp::find_executable_in_path(selfPath);
-     }
-     bp::child chProc = bp::launch(path, selfArgs, ctx);
-
-     MilliSleep(1000);
-     g_mtx.unlock();
-     return true;
-
 }
 
 //////////////////////////////////////////////////////////////////////////////

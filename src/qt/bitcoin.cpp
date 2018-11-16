@@ -124,6 +124,13 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
+
+    int rv = checkRestart();
+    while (rv == 0){
+            MilliSleep(500);
+            rv = checkRestart();
+    }
+
 	fHaveGUI = true;
     // Command-line options take precedence:
     ParseParameters(argc, argv);
@@ -257,6 +264,7 @@ int main(int argc, char *argv[])
         QObject::connect(pollShutdownTimer, SIGNAL(timeout()), guiref, SLOT(detectShutdown()));
         pollShutdownTimer->start(200);
 
+
         if(AppInit2(threadGroup))
         {
             {
@@ -303,12 +311,24 @@ int main(int argc, char *argv[])
             threadGroup.interrupt_all();
             threadGroup.join_all();
             Shutdown();
+
+            if (RestartRequested()) {
+                rv = checkRestart();
+                if (rv==1) doRestart(argc, argv);
+            }
+
         }
         else
         {
             threadGroup.interrupt_all();
             threadGroup.join_all();
             Shutdown();
+
+            if (RestartRequested()) {
+                rv = checkRestart();
+                if (rv==1) doRestart(argc, argv);
+            }
+
             return 1;
         }
     } catch (std::exception& e) {
