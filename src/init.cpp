@@ -171,7 +171,6 @@ int checkRestart()
 
                 if( g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 40 }))
                 {
-                        outfile << "mutex locked" <<std::endl;
                         g_mtx.unlock();
                         boost::interprocess::named_mutex::remove(MTX_NAME);
                         rv=0;
