@@ -8,7 +8,8 @@
 #include "wallet.h"
 
 //#define BOOST_FILESYSTEM_VERSION 2
-#include "boost/process.hpp"
+
+#include <boost/process.hpp>
 
 #include <vector>
 
