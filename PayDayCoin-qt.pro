@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = PayDayCoin-qt
-VERSION = 1.3.0.2
+VERSION = 1.3.0.5
 INCLUDEPATH += src src/json src/qt src/qt/plugins/mrichtexteditor
 QT += network printsupport
 DEFINES += ENABLE_WALLET

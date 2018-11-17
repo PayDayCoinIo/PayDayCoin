@@ -169,7 +169,7 @@ int checkRestart()
     {
                 boost::interprocess::named_mutex g_mtx(boost::interprocess::open_only, MTX_NAME);
 
-                if( g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 40 }))
+                if( g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 20 }))
                 {
                         g_mtx.unlock();
                         boost::interprocess::named_mutex::remove(MTX_NAME);
@@ -216,6 +216,7 @@ bool doRestart(int argc, char *argv[])
      else {
          path = bp::find_executable_in_path(selfPath);
      }
+
      bp::child chProc = bp::launch(path, selfArgs, ctx);
 
      MilliSleep(1000);

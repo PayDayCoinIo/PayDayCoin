@@ -28,6 +28,10 @@
 #include <QSplashScreen>
 #include <QLibraryInfo>
 
+#include <QProcess>
+#include <QThread>
+#include <QtCore>
+
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
 #define __INSURE__
@@ -124,12 +128,6 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
-
-    int rv = checkRestart();
-    while (rv == 0){
-            MilliSleep(500);
-            rv = checkRestart();
-    }
 
 	fHaveGUI = true;
     // Command-line options take precedence:
@@ -313,8 +311,10 @@ int main(int argc, char *argv[])
             Shutdown();
 
             if (RestartRequested()) {
-                rv = checkRestart();
-                if (rv==1) doRestart(argc, argv);
+                QStringList args;
+                for (int i = 1; i < argc; i++)
+                    args << argv[i];
+                QProcess::startDetached(QApplication::applicationFilePath(),args);
             }
 
         }
@@ -325,8 +325,10 @@ int main(int argc, char *argv[])
             Shutdown();
 
             if (RestartRequested()) {
-                rv = checkRestart();
-                if (rv==1) doRestart(argc, argv);
+                QStringList args;
+                for (int i = 1; i < argc; i++)
+                    args << argv[i];
+                QProcess::startDetached(QApplication::applicationFilePath(),args);
             }
 
             return 1;
