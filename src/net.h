@@ -72,6 +72,7 @@ void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
 void SocketSendData(CNode *pnode);
 void CheckPeer(CNode *pnode);
+void NetCleanUp();
 
 typedef int NodeId;
 

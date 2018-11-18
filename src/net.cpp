@@ -1721,6 +1721,7 @@ bool BindListenPort(const CService &addrBind, string& strError)
             strError = strprintf(_("Unable to bind to %s on this computer. PayDay is probably already running."), addrBind.ToString());
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %d, %s)"), addrBind.ToString(), nErr, strerror(nErr));
+        closesocket(hListenSocket);
         LogPrintf("%s\n", strError);
         return false;
     }
@@ -1899,9 +1900,12 @@ public:
 instance_of_cnetcleanup;
 
 
+void NetCleanUp()
+{
+    CNetCleanup *tmp = new CNetCleanup();
+    delete tmp;
 
-
-
+}
 
 
 void RelayTransaction(const CTransaction& tx, const uint256& hash)
