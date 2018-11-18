@@ -164,7 +164,7 @@ int checkRestart()
     int rv = 0;
     try
     {
-                boost::interprocess::named_mutex g_mtx(boost::interprocess::open_or_create, MTX_NAME);
+                boost::interprocess::named_mutex g_mtx(boost::interprocess::open_only, MTX_NAME);
                 if( g_mtx.timed_lock(boost::get_system_time() + boost::posix_time::seconds{ 40 }))
                 {
                         g_mtx.unlock();
