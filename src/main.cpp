@@ -36,6 +36,7 @@ using namespace boost;
 //
 
 int64_t WalletStart = GetTime();
+int64_t WaitInterval = 10*60;
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
@@ -1469,10 +1470,11 @@ bool IsWalletGracePeriod()
 		WalletStart = GetTime();
 		LogPrintf("Updated start time is : %d \n", WalletStart);
 	}
-	if (GetTime() < WalletStart + 3600) {
-  	return true;
-	}
-	
+
+  CBlockIndex* pindex = pindexBest;
+
+  if ((GetTime() < WalletStart + 30*60) && !(GetTime() < pindex->GetBlockTime() + 60)) return true;
+
 	return false;		
 }
 
@@ -1489,7 +1491,7 @@ bool IsInitialBlockDownload()
 		nLastUpdate = GetTime();
 	}
 	return (GetTime() - nLastUpdate < 15 &&
-		pindexBest->GetBlockTime() < GetTime() - 8 * 60 * 60);
+        pindexBest->GetBlockTime() < GetTime() - 5 * 60 * 60);
 }
 
 void static InvalidChainFound(CBlockIndex* pindexNew)
@@ -2542,74 +2544,67 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 			CBlockIndex *pindex = pindexBest;
 			if (IsProofOfStake() && pindex != NULL) {
 				if (pindex->GetBlockHash() == hashPrevBlock) {
-					// If we don't already have its previous block, skip masternode payment step
-				    CAmount masternodePaymentAmount;
-					for (int i = vtx[1].vout.size(); i-- > 0; ) {
-                        masternodePaymentAmount = vtx[1].vout[i].nValue;
-                        break;
-					}
-					bool foundPaymentAmount = false;
-					bool foundPayee = false;
-					bool foundPaymentAndPayee = false;
-					//CScript payeerewardaddress = CScript();
-					string targetNode;
-					CScript payee;
-					CTxIn vin;
+                    // If we don't already have its previous block, skip masternode payment step
+                    CAmount masternodePaymentAmount = 0; // = GetMasternodePayment(pindex->nHeight+1, nReward);
+                    CAmount rewardPaymentAmount = 0;
 
-                    if (!masternodePayments.GetBlockPayee(pindexBest->nHeight + 1, payee, vin)) {
+                    bool foundMasternodeAmount = false;
+                    bool foundRewardAmount = false;
+
+                    CScript masternodepayee;
+                    CScript payeerewardaddress;
+                    CTxIn vin;
+
+                    if (!masternodePayments.GetBlockPayee(pindex->nHeight + 1, masternodepayee, vin)) {
                         CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
                         if (winningNode) {
-                            payee = GetScriptForDestination(winningNode->pubkey.GetID());
-                            //payeerewardaddress = winningNode->donationAddress;
-                            CTxDestination address1;
-                            ExtractDestination(payee, address1);
-                            CPayDaycoinAddress address2(address1);
-
-                            //CTxDestination address3;
-                            //ExtractDestination(payeerewardaddress, address3);
-                            //CPayDaycoinAddress address4(address3);
-                            targetNode = address2.ToString().c_str();
-                            //LogPrintf("Masternode winner address: %s\n", targetNode);
-
+                            masternodepayee = GetScriptForDestination(winningNode->pubkey.GetID());
+                            payeerewardaddress = winningNode->donationAddress;
                         }
                         else
                         {
-                            foundPayee = true; //doesn't require a specific payee
-                            foundPaymentAmount = true;
-                            foundPaymentAndPayee = true;
-                            if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindexBest->nHeight + 1);
+                            foundMasternodeAmount = true; //doesn't require a specific payee
+                            foundRewardAmount = true;
+
+                            if (fDebug) LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", pindex->nHeight + 1);
                         }
                     }
 
-					for (unsigned int i = 0; i < vtx[1].vout.size(); i++) {
-                        
-                        if (vtx[1].vout[i].nValue == masternodePaymentAmount) foundPaymentAmount = true;
-                        if (vtx[1].vout[i].scriptPubKey == payee) foundPayee = true;
-                        CTxDestination address1;
-                        ExtractDestination(vtx[1].vout[i].scriptPubKey, address1);
-                        CPayDaycoinAddress address2(address1);
-                        if (vtx[1].vout[i].nValue == masternodePaymentAmount && address2.ToString().c_str() == targetNode) foundPaymentAndPayee = true;
+                    for (unsigned int i = 0; i < vtx[1].vout.size(); i++) {
 
-					}
+                        if (vtx[1].vout[i].scriptPubKey == masternodepayee ) {
+                            masternodePaymentAmount = vtx[1].vout[i].nValue;
+                            foundMasternodeAmount = true;
+                            continue;
+                        }
+                        if ( vtx[1].vout[i].scriptPubKey == payeerewardaddress) {
+                            rewardPaymentAmount = vtx[1].vout[i].nValue;
+                            foundRewardAmount = true;
+                            continue;
+                        }
+                    }
 
-					CTxDestination address1;
-					ExtractDestination(payee, address1);
-					CPayDaycoinAddress address2(address1);
-					
-					bool fIsWalletGracePeriod = IsWalletGracePeriod();
-					if (fIsWalletGracePeriod) {
-						foundPaymentAmount = true;
-						foundPayee = true;
-						foundPaymentAndPayee = true;
-					}
-					
-					if (!foundPaymentAndPayee) {
-						if (fDebug) { LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight + 1); }
-						return DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
-					}
-					else {
-						LogPrintf("CheckBlock() : Found payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight + 1);
-					}
+                    CTxDestination mnDestAddr;
+                    ExtractDestination(masternodepayee, mnDestAddr);
+                    CPayDaycoinAddress mnAddress(mnDestAddr);
+
+                    CTxDestination rpDestAddr;
+                    ExtractDestination(payeerewardaddress, rpDestAddr);
+                    CPayDaycoinAddress rpAddress(rpDestAddr);
+
+                    bool fIsWalletGracePeriod = IsWalletGracePeriod();
+                    if (fIsWalletGracePeriod) {
+                        foundMasternodeAmount = true;
+                        foundRewardAmount = true;
+                    }
+
+                    if (!foundMasternodeAmount || !foundRewardAmount) {
+                        LogPrintf("CheckBlock(): Couldn't find masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
+                        return DoS(100, error("CheckBlock(): Ban SyncNode with reason: Couldn't find masternode payment or reward payee"));
+                    }
+                    else {
+                        LogPrintf("CheckBlock(): Found masternode payment(%s|%d) or reward payee(%s|%d) nHeight %d. \n", mnAddress.ToString().c_str(), masternodePaymentAmount, rpAddress.ToString().c_str(), rewardPaymentAmount, pindex->nHeight + 1);
+                    }
 				}
 				else {
 					if (fDebug) { LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", pindexBest->nHeight + 1, GetHash().ToString().c_str()); }
@@ -3935,7 +3930,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		// Send the rest of the chain
 		if (pindex)
 			pindex = pindex->pnext;
-		int nLimit = 5000;
+        int nLimit = 500;
 		LogPrint("net", "getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), nLimit);
 		for (; pindex; pindex = pindex->pnext)
 		{
@@ -4411,6 +4406,16 @@ bool ProcessMessages(CNode* pfrom)
 		try
 		{
 			fRet = ProcessMessage(pfrom, strCommand, vRecv);
+            if (GetTime() > nTimeLastCheckAcception + WaitInterval) {
+                nTimeLastCheckAcception = GetTime();
+                if (nBestHeight - nLastCheckBlockHeight < 1) {
+                    LogPrintf("CheckBlockChain: Detect Sync Problem, try restart\n");
+                    StartRestart();
+                    StartShutdown();
+                }
+                nLastCheckBlockHeight = nBestHeight;
+            }
+
 			boost::this_thread::interruption_point();
 		}
 		catch (std::ios_base::failure& e)

@@ -1538,7 +1538,7 @@ void static StartSync(const vector<CNode*> &vNodes) {
         if (!pnode->fClient && !pnode->fOneShot &&
             !pnode->fDisconnect && pnode->fSuccessfullyConnected &&
             (pnode->nStartingHeight > (nBestHeight - 144)) &&
-            (pnode->nVersion < NOBLKS_VERSION_START || pnode->nVersion >= NOBLKS_VERSION_END)) {
+            (pnode->nVersion < NOBLKS_VERSION_START || pnode->nVersion >= GetPoolPeerProtoVersion())) {
             // if ok, compare node's score with the best so far
             int64_t nScore = NodeSyncScore(pnode);
             if (pnodeNewSync == NULL || nScore > nBestScore) {
@@ -1721,6 +1721,7 @@ bool BindListenPort(const CService &addrBind, string& strError)
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %d, %s)"), addrBind.ToString(), nErr, strerror(nErr));
         LogPrintf("%s\n", strError);
+        closesocket(hListenSocket);
         return false;
     }
     LogPrintf("Bound to %s\n", addrBind.ToString());
@@ -1897,11 +1898,12 @@ public:
 }
 instance_of_cnetcleanup;
 
+void NetCleanUp()
+{
+    CNetCleanup *tmp = new CNetCleanup();
+    delete tmp;
 
-
-
-
-
+}
 
 void RelayTransaction(const CTransaction& tx, const uint256& hash)
 {

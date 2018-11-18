@@ -128,12 +128,24 @@ bool AppInit(int argc, char* argv[])
 extern void noui_connect();
 int main(int argc, char* argv[])
 {
+
+    int rv = checkRestart();
+    while (rv == 0){
+            MilliSleep(500);
+            rv = checkRestart();
+    }
+
     bool fRet = false;
 
     // Connect bitcoind signal handlers
     noui_connect();
 
     fRet = AppInit(argc, argv);
+
+    if (RestartRequested()) {
+        rv = checkRestart();
+        if (rv==1) doRestart(argc, argv);
+    }
 
     if (fRet && fDaemon)
         return 0;

@@ -209,7 +209,17 @@ Value stop(const Array& params, bool fHelp)
     return "PayDay server stopping";
 }
 
+Value hardrestart(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "hardrestart\n"
+            "Execute Hard Restart PayDay server.");
 
+   StartRestart();
+   StartShutdown();
+   return "Hard Restart PayDay Daemon starting";
+}
 
 //
 // Call Table
@@ -221,6 +231,7 @@ static const CRPCCommand vRPCCommands[] =
   //  ------------------------  -----------------------  ---------- ---------- ---------
     { "help",                   &help,                   true,      true,      false },
     { "stop",                   &stop,                   true,      true,      false },
+    { "hardrestart",            &hardrestart,            false,     false,     false },
     { "getbestblockhash",       &getbestblockhash,       true,      false,     false },
     { "getblockcount",          &getblockcount,          true,      false,     false },
     { "getconnectioncount",     &getconnectioncount,     true,      false,     false },
@@ -330,6 +341,7 @@ static const CRPCCommand vRPCCommands[] =
     { "smsginbox",              &smsginbox,              false,     false,     false },
     { "smsgoutbox",             &smsgoutbox,             false,     false,     false },
     { "smsgbuckets",            &smsgbuckets,            false,     false,     false },
+
 #endif
 };
 

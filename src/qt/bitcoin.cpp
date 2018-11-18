@@ -27,6 +27,7 @@
 #include <QTranslator>
 #include <QSplashScreen>
 #include <QLibraryInfo>
+#include <QProcess>
 
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
@@ -303,12 +304,29 @@ int main(int argc, char *argv[])
             threadGroup.interrupt_all();
             threadGroup.join_all();
             Shutdown();
+
+            if (RestartRequested()) {
+                QStringList args;
+                for (int i = 1; i < argc; i++)
+                    args << argv[i];
+                NetCleanUp();
+                QProcess::startDetached(QApplication::applicationFilePath(),args);
+            }
         }
         else
         {
             threadGroup.interrupt_all();
             threadGroup.join_all();
             Shutdown();
+
+            if (RestartRequested()) {
+                QStringList args;
+                for (int i = 1; i < argc; i++)
+                    args << argv[i];
+                NetCleanUp();
+                QProcess::startDetached(QApplication::applicationFilePath(),args);
+            }
+
             return 1;
         }
     } catch (std::exception& e) {

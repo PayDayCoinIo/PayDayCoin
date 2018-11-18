@@ -7,14 +7,40 @@
 
 #include "wallet.h"
 
+#include <boost/process.hpp>
+
+#include <vector>
+
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
+namespace bp = ::boost::process;
+using namespace boost;
+
+#define MTX_NAME    "pdd_onair_restart"
+
 namespace boost {
     class thread_group;
 } // namespace boost
 
 extern CWallet* pwalletMain;
 void StartShutdown();
+void StartRestart();
+
 bool ShutdownRequested();
+bool RestartRequested();
+
 void Shutdown();
+int checkRestart();
+bool doRestart(int argc, char *argv[]);
+
 bool AppInit2(boost::thread_group& threadGroup);
 std::string HelpMessage();
 extern bool fOnlyTor;

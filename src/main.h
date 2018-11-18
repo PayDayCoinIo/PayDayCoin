@@ -90,6 +90,7 @@ extern unsigned int nStakeMaxAge;
 extern unsigned int nNodeLifespan;
 extern int nCoinbaseMaturity;
 extern int nBestHeight;
+extern int nLastCheckBlockHeight;
 extern uint256 nBestChainTrust;
 extern uint256 nBestInvalidTrust;
 extern uint256 hashBestChain;
@@ -111,6 +112,11 @@ extern unsigned int nDerivationMethodIndex;
 
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
+
+extern int64_t nTimeLastCheckAcception;
+extern int64_t WalletStart;
+
+extern int64_t WaitInterval;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;

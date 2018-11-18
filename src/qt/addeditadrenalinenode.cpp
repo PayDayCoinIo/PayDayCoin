@@ -93,7 +93,7 @@ void AddEditAdrenalineNode::on_okButton_clicked()
         {
             stream << sAlias << " " << sAddress << " " << sMasternodePrivKey << " " << sTxHash << " " << sOutputIndex;
             if (sDonationAddress != "" && sDonationAddress != ""){
-                stream << " " << sDonationAddress << " " << sDonationPercentage << std::endl;
+                stream << " " << sDonationAddress << ":" << sDonationPercentage << std::endl;
             } else {
                 stream << std::endl;
             }
