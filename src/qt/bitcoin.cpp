@@ -129,7 +129,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 int main(int argc, char *argv[])
 {
 
-	fHaveGUI = true;
+    fHaveGUI = true;
     // Command-line options take precedence:
     ParseParameters(argc, argv);
 
@@ -314,6 +314,7 @@ int main(int argc, char *argv[])
                 QStringList args;
                 for (int i = 1; i < argc; i++)
                     args << argv[i];
+                NetCleanUp();
                 QProcess::startDetached(QApplication::applicationFilePath(),args);
             }
 
@@ -328,6 +329,7 @@ int main(int argc, char *argv[])
                 QStringList args;
                 for (int i = 1; i < argc; i++)
                     args << argv[i];
+                NetCleanUp();
                 QProcess::startDetached(QApplication::applicationFilePath(),args);
             }
 
