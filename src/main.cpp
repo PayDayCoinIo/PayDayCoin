@@ -37,6 +37,7 @@ using namespace boost;
 
 int64_t WalletStart = GetTime();
 int64_t WaitInterval = 10*60;
+int64_t nTimeLastCheckAcception = GetTime();
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
@@ -57,6 +58,7 @@ unsigned int nModifierInterval = 2 * 60; // time to elapse before new modifier i
 int nCoinbaseMaturity = 63;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
+int nLastCheckBlockHeight = 0;
 
 uint256 nBestChainTrust = 0;
 uint256 nBestInvalidTrust = 0;
@@ -64,6 +66,7 @@ uint256 nBestInvalidTrust = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64_t nTimeBestReceived = 0;
+
 bool fImporting = false;
 bool fReindex = false;
 bool fAddrIndex = false;
