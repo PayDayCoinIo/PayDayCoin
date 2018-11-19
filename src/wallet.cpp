@@ -3537,8 +3537,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     CTxIn vin;
     int payeerewardpercent = 0;
     bool hasPayment = false;
-    bool fIsInitialDownload = IsInitialBlockDownload();
-
+	bool fIsInitialDownload = IsInitialBlockDownload();
+		
     if(bMasterNodePayment) {
         //spork
         if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, masternodepayee, vin)){
@@ -3554,18 +3554,70 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         }
     }
 
-    if(hasPayment && payeerewardpercent == 100 ){
-        payments = txNew.vout.size() + 1;
-        txNew.vout.resize(payments);
+    int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, nReward);
 
-        txNew.vout[payments-1].scriptPubKey = payeerewardaddress;
-        txNew.vout[payments-1].nValue = 0;
+    CBlock block;
+    bool BlkExist = block.ReadFromDisk(pindexPrev, true);
+    unsigned int ExtendReward = 0;
 
-        CTxDestination address1;
-        ExtractDestination(payeerewardaddress, address1);
-        CPayDaycoinAddress address2(address1);
+    if (BlkExist && block.vtx.size() > 2)
+    {
 
-        LogPrintf("Masternode payment to donation address %s\n", address2.ToString().c_str());
+        CTxDB txdb("r");
+        double allValueOut = 0;
+        double prevValueOut = 0;
+        unsigned int addrcount = 0;
+
+        double dRewardV = ((nReward - masternodePayment) / 100) * (100 - 60);
+        nCredit -= dRewardV;
+        double vReward = 0;
+
+        BOOST_FOREACH (const CTransaction& btx, block.vtx)
+        {
+
+            if (btx.IsCoinStake() || btx.IsCoinBase() || btx.IsNull()) continue;
+
+            BOOST_FOREACH (const CTxIn& txin, btx.vin)
+            {
+                CTransaction txPrev;
+                CTxIndex txindex;
+                if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex)) continue;
+                allValueOut += txPrev.vout[txin.prevout.n].nValue;
+            }
+        }
+
+        BOOST_FOREACH (const CTransaction& btx, block.vtx)
+        {
+
+            if (btx.IsCoinStake() || btx.IsCoinBase() || btx.IsNull()) continue;
+
+            addrcount=0;
+            prevValueOut=0;
+
+            BOOST_FOREACH (const CTxIn& txin, btx.vin)
+            {
+                CTransaction txPrev;
+                CTxIndex txindex;
+                if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex)) continue;
+                prevValueOut += txPrev.vout[txin.prevout.n].nValue;
+                addrcount++;
+            }
+            vReward = dRewardV * (prevValueOut / allValueOut);
+            BOOST_FOREACH (const CTxIn& txin, btx.vin)
+            {
+                CTransaction txPrev;
+                CTxIndex txindex;
+                if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex)) continue;
+
+                CScript scriptPubKeyOut2;
+                scriptPubKeyOut2 = txPrev.vout[txin.prevout.n].scriptPubKey;
+
+                txNew.vout.push_back(CTxOut((vReward / addrcount), scriptPubKeyOut2));
+
+                ExtendReward++;
+            }
+        }
+
     }
 
     if(hasPayment && payeerewardpercent == 0 ){
@@ -3603,33 +3655,71 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         LogPrintf("Masternode payment to both address: %s & %s\n", address2.ToString().c_str(),address4.ToString().c_str());
     }
 
+    if(hasPayment && payeerewardpercent == 100 ){
+        payments = txNew.vout.size() + 1;
+        txNew.vout.resize(payments);
+
+        txNew.vout[payments-1].scriptPubKey = payeerewardaddress;
+        txNew.vout[payments-1].nValue = 0;
+
+        CTxDestination address1;
+        ExtractDestination(payeerewardaddress, address1);
+        CPayDaycoinAddress address2(address1);
+
+        LogPrintf("Masternode payment to donation address %s\n", address2.ToString().c_str());
+    }
+
+    // If reward percent more than 0 and lower than 100 then split reward
+    if(hasPayment && payeerewardpercent > 0 && payeerewardpercent < 100){
+        payments = txNew.vout.size() + 2;
+        txNew.vout.resize(payments);
+
+        txNew.vout[payments-2].scriptPubKey = payeerewardaddress;
+        txNew.vout[payments-2].nValue = 0;
+
+        txNew.vout[payments-1].scriptPubKey = masternodepayee;
+        txNew.vout[payments-1].nValue = 0;
+
+        CTxDestination address1;
+        ExtractDestination(masternodepayee, address1);
+        CPayDaycoinAddress address2(address1);
+
+        CTxDestination address3;
+        ExtractDestination(payeerewardaddress, address3);
+        CPayDaycoinAddress address4(address3);
+
+        LogPrintf("Masternode payment to both address: %s & %s\n", address2.ToString().c_str(),address4.ToString().c_str());
+    }
+
     int64_t blockValue = nCredit;
-    int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, nReward);
 
     // Set output amount
-    if (hasPayment && txNew.vout.size() == 5 && (payeerewardpercent > 0 && payeerewardpercent < 100) ) // 2 stake outputs, stake was split, masternode payment, split donat
+    if (hasPayment && txNew.vout.size() == (5 + ExtendReward) && (payeerewardpercent > 0 && payeerewardpercent < 100) ) // 2 stake outputs, stake was split, masternode payment, split donat
     {
         txNew.vout[payments-1].nValue = (masternodePayment / 100) * (100 - payeerewardpercent);
         txNew.vout[payments-2].nValue = masternodePayment - txNew.vout[payments-1].nValue;
+
         blockValue -= masternodePayment;
         txNew.vout[1].nValue = (blockValue / 2 / CENT) * CENT;
         txNew.vout[2].nValue = blockValue - txNew.vout[1].nValue;
+
     }
-    else if(hasPayment && txNew.vout.size() == 4 && (payeerewardpercent == 0 || payeerewardpercent == 100)  ) // 2 stake outputs, stake was split, plus a masternode payment
+    else if(hasPayment && txNew.vout.size() == (4 + ExtendReward) && (payeerewardpercent == 0 || payeerewardpercent == 100)  ) // 2 stake outputs, stake was split, plus a masternode payment
     {
         txNew.vout[payments-1].nValue = masternodePayment;
         blockValue -= masternodePayment;
         txNew.vout[1].nValue = (blockValue / 2 / CENT) * CENT;
         txNew.vout[2].nValue = blockValue - txNew.vout[1].nValue;
+
     }
-    else if(hasPayment && txNew.vout.size() == 4 && (payeerewardpercent > 0 && payeerewardpercent < 100) )  // only 1 stake output, was not split, no masternode payment
+    else if(hasPayment && txNew.vout.size() == (4 + ExtendReward) && (payeerewardpercent > 0 && payeerewardpercent < 100) )  // only 1 stake output, was not split, no masternode payment
     {
         txNew.vout[payments-1].nValue = (masternodePayment / 100) * (100 - payeerewardpercent);
         txNew.vout[payments-2].nValue = masternodePayment - txNew.vout[payments-1].nValue;
         blockValue -= masternodePayment;
         txNew.vout[1].nValue = blockValue;
     }
-    else if(hasPayment && txNew.vout.size() == 3 && (payeerewardpercent == 0 || payeerewardpercent == 100) ) // only 1 stake output, was not split, plus a masternode payment
+    else if(hasPayment && txNew.vout.size() == (3 + ExtendReward) && (payeerewardpercent == 0 || payeerewardpercent == 100) ) // only 1 stake output, was not split, plus a masternode payment
     {
         txNew.vout[payments-1].nValue = masternodePayment;
         blockValue -= masternodePayment;

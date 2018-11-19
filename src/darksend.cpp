@@ -2266,7 +2266,6 @@ void ThreadCheckDarkSendPool()
     RenameThread("PayDay-darksend");
 
     unsigned int c = 0;
-
     while (true)
     {
         MilliSleep(1000);

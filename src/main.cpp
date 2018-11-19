@@ -47,6 +47,7 @@ CCriticalSection cs_main;
 CTxMemPool mempool;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
+map<uint256, CBlockIndex*> tmpMapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
@@ -62,7 +63,7 @@ int nLastCheckBlockHeight = 0;
 
 uint256 nBestChainTrust = 0;
 uint256 nBestInvalidTrust = 0;
-
+uint256 hashStopBlock = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64_t nTimeBestReceived = 0;
@@ -71,7 +72,7 @@ bool fImporting = false;
 bool fReindex = false;
 bool fAddrIndex = false;
 bool fHaveGUI = false;
-
+bool NeedToReload = false;
 
 struct COrphanBlock {
 	uint256 hashBlock;
@@ -79,6 +80,7 @@ struct COrphanBlock {
 	std::pair<COutPoint, unsigned int> stake;
 	vector<unsigned char> vchBlock;
 };
+
 map<uint256, COrphanBlock*> mapOrphanBlocks;
 multimap<uint256, COrphanBlock*> mapOrphanBlocksByPrev;
 set<pair<COutPoint, unsigned int> > setStakeSeenOrphan;
@@ -1478,6 +1480,7 @@ bool IsWalletGracePeriod()
 
   if ((GetTime() < WalletStart + 30*60) && !(GetTime() < pindex->GetBlockTime() + 60)) return true;
 
+
 	return false;		
 }
 
@@ -2458,11 +2461,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos, const u
 		hashPrevBestCoinBase = vtx[0].GetHash();
 	}
 
-
-
-
-
-
 	return true;
 }
 
@@ -2530,14 +2528,13 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 		if (fDebug) { LogPrintf("CheckBlock() : skipping transaction locking checks\n"); }
 	}
 
-
-
 	// ----------- masternode payments -----------
 
 	bool MasternodePayments = false;
 	bool fIsInitialDownload = IsInitialBlockDownload();
 
 	if (nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
+
 	if (!fIsInitialDownload)
 	{
 		if (MasternodePayments)
@@ -2546,8 +2543,10 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
 			CBlockIndex *pindex = pindexBest;
 			if (IsProofOfStake() && pindex != NULL) {
+
 				if (pindex->GetBlockHash() == hashPrevBlock) {
                     // If we don't already have its previous block, skip masternode payment step
+
                     CAmount masternodePaymentAmount = 0; // = GetMasternodePayment(pindex->nHeight+1, nReward);
                     CAmount rewardPaymentAmount = 0;
 
@@ -2557,6 +2556,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                     CScript masternodepayee;
                     CScript payeerewardaddress;
                     CTxIn vin;
+
 
                     if (!masternodePayments.GetBlockPayee(pindex->nHeight + 1, masternodepayee, vin)) {
                         CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
@@ -2587,6 +2587,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                         }
                     }
 
+
                     CTxDestination mnDestAddr;
                     ExtractDestination(masternodepayee, mnDestAddr);
                     CPayDaycoinAddress mnAddress(mnDestAddr);
@@ -2610,19 +2611,19 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                     }
 				}
 				else {
-					if (fDebug) { LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", pindexBest->nHeight + 1, GetHash().ToString().c_str()); }
+                    if (fDebug) { LogPrintf("CheckBlock(): Skipping masternode payment check - nHeight %d Hash %s\n", pindex->nHeight + 1, GetHash().ToString().c_str()); }
 				}
 			}
 			else {
-				if (fDebug) { LogPrintf("CheckBlock() : pindex is null, skipping masternode payment check\n"); }
+                if (fDebug) { LogPrintf("CheckBlock(): pindex is null, skipping masternode payment check\n"); }
 			}
 		}
 		else {
-			if (fDebug) { LogPrintf("CheckBlock() : skipping masternode payment checks\n"); }
+            if (fDebug) { LogPrintf("CheckBlock(): skipping masternode payment checks\n"); }
 		}
 	}
 	else {
-		if (fDebug) { LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", pindexBest->nHeight + 1); }
+        if (fDebug) { LogPrintf("CheckBlock(): Is initial download, skipping masternode payment check %d\n", pindexBest->nHeight + 1); }
 	}
 
 
@@ -2630,11 +2631,11 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 	BOOST_FOREACH(const CTransaction& tx, vtx)
 	{
 		if (!tx.CheckTransaction())
-			return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
+            return DoS(tx.nDoS, error("CheckBlock(): CheckTransaction failed"));
 
 		// ppcoin: check transaction timestamp
 		if (GetBlockTime() < (int64_t)tx.nTime)
-			return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+            return DoS(50, error("CheckBlock(): block timestamp earlier than transaction timestamp"));
 	}
 
 	// Check for duplicate txids. This is caught by ConnectInputs(),
@@ -2645,7 +2646,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 		uniqueTx.insert(tx.GetHash());
 	}
 	if (uniqueTx.size() != vtx.size())
-		return DoS(100, error("CheckBlock() : duplicate transaction"));
+        return DoS(100, error("CheckBlock(): duplicate transaction"));
 
 	unsigned int nSigOps = 0;
 	BOOST_FOREACH(const CTransaction& tx, vtx)
@@ -2653,11 +2654,11 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 		nSigOps += GetLegacySigOpCount(tx);
 	}
 	if (nSigOps > MAX_BLOCK_SIGOPS)
-		return DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
+        return DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"));
 
 	// Check merkle root
 	if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
-		return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+        return DoS(100, error("CheckBlock(): hashMerkleRoot mismatch"));
 
 
 	return true;
@@ -2853,9 +2854,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 	if (!fReindex && !fImporting && pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash))
 		return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString(), pblock->GetProofOfStake().second, hash.ToString());
 
-
-
-
 	if (pblock->hashPrevBlock != hashBestChain)
 	{
 		// Extra checks to prevent "fill up memory by spamming with bogus blocks"
@@ -2878,9 +2876,22 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 	// Preliminary checks
 	if (!pblock->CheckBlock())
 		return error("ProcessBlock() : CheckBlock FAILED");
+/*
+    if (tmpMapBlockIndex.count(pblock->hashPrevBlock)) {
+        CBlockIndex *pindex = pindexBest;
+        tmpMapBlockIndex.insert(make_pair(hash,pindex));
+        //LogPrintf("ProcessBlock: TMP BLOCK %lu, prev=%s\n", (unsigned long)tmpMapBlockIndex.size(), pblock->hashPrevBlock.ToString());
+        if (GetTime() > WaitInterval + 5*60){
+            tmpMapBlockIndex.clear();
+            WaitBlocks = false;
+            PushGetBlocks(pfrom, pindexBest, hashStopBlock);
 
+        }
+        return true;
+    }
+*/
 	// If we don't already have its previous block, shunt it off to holding area until we get it
-	if (!mapBlockIndex.count(pblock->hashPrevBlock))
+    if (!mapBlockIndex.count(pblock->hashPrevBlock))
 	{
 		LogPrintf("ProcessBlock: ORPHAN BLOCK %lu, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->hashPrevBlock.ToString());
 
@@ -3348,13 +3359,6 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 		}
 	}
 }
-
-
-
-
-
-
-
 
 
 
@@ -4091,11 +4095,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 					CTransaction& orphanTx = mapOrphanTransactions[orphanTxHash];
 					bool fMissingInputs2 = false;
 
-
-
-
-
-
 					if (AcceptToMemoryPool(mempool, orphanTx, true, &fMissingInputs2))
 					{
 						LogPrint("mempool", "   accepted orphan tx %s\n", orphanTxHash.ToString());
@@ -4169,7 +4168,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 				pfrom->PushAddress(addr);
 	}
 
-
 	else if (strCommand == "mempool")
 	{
 		LOCK(cs_main);
@@ -4187,7 +4185,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		if (vInv.size() > 0)
 			pfrom->PushMessage("inv", vInv);
 	}
-
 
 	else if (strCommand == "ping")
 	{
@@ -4302,7 +4299,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		}
 	}
 
-
 	else
 	{
 		if (fSecMsgEnabled)
@@ -4409,6 +4405,7 @@ bool ProcessMessages(CNode* pfrom)
 		try
 		{
 			fRet = ProcessMessage(pfrom, strCommand, vRecv);
+
             if (GetTime() > nTimeLastCheckAcception + WaitInterval) {
                 nTimeLastCheckAcception = GetTime();
                 if (nBestHeight - nLastCheckBlockHeight < 1) {
@@ -4449,7 +4446,7 @@ bool ProcessMessages(CNode* pfrom)
 		}
 
 		if (!fRet)
-			LogPrintf("ProcessMessage(%s, %u bytes) FAILED\n", strCommand, nMessageSize);
+			LogPrintf("ProcessMessage(%s, %u bytes) FAILED\n", strCommand, nMessageSize);        
 
 		break;
 	}
@@ -4509,7 +4506,36 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 			pto->fStartSync = false;
 			PushGetBlocks(pto, pindexBest, uint256(0));
 		}
+        if (NeedToReload) {
+            LogPrintf("CheckBlockChain: Sync problem: Request block again.\n");
 
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* cnode, vNodes)
+                if (pto != cnode) cnode->fDisconnect = true;
+
+            const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+            CNode* rnode = NULL;
+            BOOST_FOREACH(const CDNSSeedData &seed, vSeeds)
+            {
+                if (rnode == NULL) {
+                    CAddress addr;
+                    rnode = ConnectNode(addr, seed.host.c_str());
+                }
+            }
+
+            mapOrphanBlocks.clear();
+            mapOrphanBlocksByPrev.clear();
+            mapOrphanTransactions.clear();
+            mapOrphanTransactionsByPrev.clear();
+            /*
+            CAddress addr;
+            ConnectNode(addr, strNode.c_str());
+            */
+
+            PushGetBlocks(pto, pindexBest, uint256(0));
+
+            NeedToReload = false;
+        }
 		// Resend wallet transactions that haven't gotten in a block yet
 		// Except during reindex, importing and IBD, when old wallet
 		// transactions become unconfirmed and spams other nodes.
@@ -4663,7 +4689,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 	return true;
 }
 
+bool CheckBlockAcception()
+{
 
+
+    return true;
+}
 
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
 {

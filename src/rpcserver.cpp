@@ -206,7 +206,7 @@ Value stop(const Array& params, bool fHelp)
             "Stop PayDay server.");
     // Shutdown will take long enough that the response should get back
     StartShutdown();
-    return "PayDay server stopping";
+    return "PayDay server stopping\n";
 }
 
 Value hardrestart(const Array& params, bool fHelp)
@@ -341,7 +341,6 @@ static const CRPCCommand vRPCCommands[] =
     { "smsginbox",              &smsginbox,              false,     false,     false },
     { "smsgoutbox",             &smsgoutbox,             false,     false,     false },
     { "smsgbuckets",            &smsgbuckets,            false,     false,     false },
-
 #endif
 };
 

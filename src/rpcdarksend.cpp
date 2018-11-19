@@ -801,7 +801,7 @@ Value masternodelist(const Array& params, bool fHelp)
             std::string strVin = mn.vin.prevout.ToStringShort();
             if (strMode == "activeseconds") {
                 if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strVin,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
+                obj.push_back(Pair(strVin, (int64_t)(mn.lastTimeSeen - mn.sigTime)));
             } else if (strMode == "donation") {
                 CTxDestination address1;
                 ExtractDestination(mn.donationAddress, address1);
@@ -817,7 +817,7 @@ Value masternodelist(const Array& params, bool fHelp)
                     strOut += ":";
                     strOut += boost::lexical_cast<std::string>(mn.donationPercentage);
                 }
-                obj.push_back(Pair(strVin,       strOut.c_str()));
+                obj.push_back(Pair(strVin, strOut.c_str()));
             } else if (strMode == "full") {
                 CScript pubkey;
                 pubkey.SetDestination(mn.pubkey.GetID());
