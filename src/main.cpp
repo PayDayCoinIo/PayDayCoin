@@ -47,7 +47,7 @@ CCriticalSection cs_main;
 CTxMemPool mempool;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
-map<uint256, CBlockIndex*> tmpMapBlockIndex;
+
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
@@ -63,7 +63,6 @@ int nLastCheckBlockHeight = 0;
 
 uint256 nBestChainTrust = 0;
 uint256 nBestInvalidTrust = 0;
-uint256 hashStopBlock = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64_t nTimeBestReceived = 0;
@@ -72,7 +71,6 @@ bool fImporting = false;
 bool fReindex = false;
 bool fAddrIndex = false;
 bool fHaveGUI = false;
-bool NeedToReload = false;
 
 struct COrphanBlock {
 	uint256 hashBlock;
@@ -2876,20 +2874,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 	// Preliminary checks
 	if (!pblock->CheckBlock())
 		return error("ProcessBlock() : CheckBlock FAILED");
-/*
-    if (tmpMapBlockIndex.count(pblock->hashPrevBlock)) {
-        CBlockIndex *pindex = pindexBest;
-        tmpMapBlockIndex.insert(make_pair(hash,pindex));
-        //LogPrintf("ProcessBlock: TMP BLOCK %lu, prev=%s\n", (unsigned long)tmpMapBlockIndex.size(), pblock->hashPrevBlock.ToString());
-        if (GetTime() > WaitInterval + 5*60){
-            tmpMapBlockIndex.clear();
-            WaitBlocks = false;
-            PushGetBlocks(pfrom, pindexBest, hashStopBlock);
 
-        }
-        return true;
-    }
-*/
 	// If we don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
 	{
@@ -4506,36 +4491,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 			pto->fStartSync = false;
 			PushGetBlocks(pto, pindexBest, uint256(0));
 		}
-        if (NeedToReload) {
-            LogPrintf("CheckBlockChain: Sync problem: Request block again.\n");
 
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* cnode, vNodes)
-                if (pto != cnode) cnode->fDisconnect = true;
-
-            const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
-            CNode* rnode = NULL;
-            BOOST_FOREACH(const CDNSSeedData &seed, vSeeds)
-            {
-                if (rnode == NULL) {
-                    CAddress addr;
-                    rnode = ConnectNode(addr, seed.host.c_str());
-                }
-            }
-
-            mapOrphanBlocks.clear();
-            mapOrphanBlocksByPrev.clear();
-            mapOrphanTransactions.clear();
-            mapOrphanTransactionsByPrev.clear();
-            /*
-            CAddress addr;
-            ConnectNode(addr, strNode.c_str());
-            */
-
-            PushGetBlocks(pto, pindexBest, uint256(0));
-
-            NeedToReload = false;
-        }
 		// Resend wallet transactions that haven't gotten in a block yet
 		// Except during reindex, importing and IBD, when old wallet
 		// transactions become unconfirmed and spams other nodes.
@@ -4687,13 +4643,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
 	}
 	return true;
-}
-
-bool CheckBlockAcception()
-{
-
-
-    return true;
 }
 
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue)

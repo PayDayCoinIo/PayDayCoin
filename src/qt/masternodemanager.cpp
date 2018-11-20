@@ -271,9 +271,6 @@ void MasternodeManager::on_createButton_clicked()
 void MasternodeManager::on_editButton_clicked()
 {
     QMessageBox msg;
-    msg.setText("Edit button clicked");
-
-    msg.exec();
 
 }
 
