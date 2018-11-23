@@ -35,7 +35,9 @@ fi
 
 sudo cp -r src/boost/boost/* /usr/include/boost/
 
-chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  make -f makefile.unix USE_UPNP=
+MAX_PARALLEL=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
+
+chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make -j${MAX_PARALLEL} libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  make -j${MAX_PARALLEL} -f makefile.unix USE_UPNP=
 strip PayDayd
 cd ..
 sudo mkdir -p /usr/bin
