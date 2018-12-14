@@ -1,16 +1,10 @@
 # Installing 
 How to install PayDay on debian-based system
 
-1. install git    
-``` sudo apt-get -y install git ```
-1. goto home directory   
-``` cd ``` 
-1. fetch sources   
-``` git clone https://github.com/PayDayCoinIo/PayDayCoin.git ```
-1. go to fetched sources   
-``` cd PayDayCoin ```
-1. download and build all pre-requisites   
-``` ./build_all ```
+1. install curl    
+``` sudo apt-get -y install curl ```
+1. run automated install 
+``` curl -L https://raw.githubusercontent.com/PayDayCoinIo/PayDayCoin/master/autobuild_latest?nocache=`date +%s%N` | bash - ```
 1. basic configure daemon
 ``` ./config_basic ```
 1. Masternode configure
