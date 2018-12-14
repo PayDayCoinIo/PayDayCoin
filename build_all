@@ -37,7 +37,17 @@ sudo cp -r src/boost/boost/* /usr/include/boost/
 
 MAX_PARALLEL=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
 
-chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make -j${MAX_PARALLEL} libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  make -j${MAX_PARALLEL} -f makefile.unix USE_UPNP=
+cd src
+curl -L http://www.openssl.org/source/openssl-1.0.1b.tar.gz -o ./openssl.tgz
+tar zxvf openssl.tgz
+cd openssl-1.0.1b/
+./config
+make -j${MAX_PARALLEL}
+cd ../..
+
+chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make -j${MAX_PARALLEL} libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  make -j${MAX_PARALLEL} -f makefile.unix OPENS
+SL_INCLUDE_PATH=openssl-1.0.1b/include OPENSSL_LIB_PATH=openssl-1.0.1b USE_UPNP=
+
 strip PayDayd
 cd ..
 sudo mkdir -p /usr/bin
