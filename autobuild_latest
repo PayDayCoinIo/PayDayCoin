@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd ~
+sudo apt-get -y install git
+git clone https://github.com/PayDayCoinIo/PayDayCoin.git
+cd PayDayCoin
+./build_all
+
+echo "for basic configuration please run ./config_basic"
+echo "for masternode configuration please run ./config_masternode after basic config"
