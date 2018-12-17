@@ -30,7 +30,6 @@ cd openssl-1.0.1b/
 make -j${MAX_PARALLEL}
 cd ../..
 
-chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make -j${MAX_PARALLEL} libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  export LD_LIBRARY_PATH=openssl-1.0.1b/ && export CPLUS_INCLUDE_PATH=boost/ && make -j${MAX_PARALLEL} -f makefile.unix OPENSSL_INCLUDE_PATH=openssl-1.0.1b/include OPENSSL_LIB_PATH
-=openssl-1.0.1b USE_UPNP=
+chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make -j${MAX_PARALLEL} libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  export LD_LIBRARY_PATH=openssl-1.0.1b/ && export CPLUS_INCLUDE_PATH=boost/ && make -j${MAX_PARALLEL} -f makefile.unix OPENSSL_INCLUDE_PATH=openssl-1.0.1b/include OPENSSL_LIB_PATH=openssl-1.0.1b USE_UPNP=
 
 strip PayDayd
