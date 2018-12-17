@@ -1,0 +1,36 @@
+#!/bin/bash
+
+echo -n "Checking packages : "
+declare -a pkgs=('curl' 'git' 'make' 'g++' 'autoconf' 'automake' 'autotools-dev' 'autoconf' 'automake' 'libtool'  'libboost-all-dev' 'libssl-dev' 'libdb-dev' 'libdb++-dev' 'libdb++-dev' 'libminiupnpc-dev' 'libgmp3-dev')
+for i in "${pkgs[@]}"
+do
+        echo -n $i
+        echo -n " "
+        dpkg-query -l $i > /dev/null 2>&1
+        if [ $? != 0 ]; then
+                echo
+                echo "Please install package $i"
+                echo "Complete list of packages : ${pkgs[@]}"
+                exit
+        fi
+done
+echo
+echo "Packages ok building"
+
+MAX_PARALLEL=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
+
+echo "Parallel build with $MAX_PARALLEL cores"
+
+cd src
+curl -L http://www.openssl.org/source/openssl-1.0.1b.tar.gz -o ./openssl.tgz
+tar zxvf openssl.tgz
+rm -f openssl.tgz
+cd openssl-1.0.1b/
+./config
+make -j${MAX_PARALLEL}
+cd ../..
+
+chmod 755 src/leveldb/build_detect_platform && chmod 755 src/secp256k1/autogen.sh   &&  cd src/leveldb &&     make -j${MAX_PARALLEL} libleveldb.a libmemenv.a &&  cd ../.. && cd src &&  export LD_LIBRARY_PATH=openssl-1.0.1b/ && export CPLUS_INCLUDE_PATH=boost/ && make -j${MAX_PARALLEL} -f makefile.unix OPENSSL_INCLUDE_PATH=openssl-1.0.1b/include OPENSSL_LIB_PATH
+=openssl-1.0.1b USE_UPNP=
+
+strip PayDayd
